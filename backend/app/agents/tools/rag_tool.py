@@ -106,6 +106,7 @@ def _build_chat_llm():
         from langchain_openai import ChatOpenAI
     except ImportError:
         return None
+    # 与 trip_planner_agent 保持一致：显式关闭思考模式，固定上游默认行为。
     return ChatOpenAI(
         model=LLM_MODEL,
         temperature=0.2,
@@ -113,6 +114,7 @@ def _build_chat_llm():
         base_url=LLM_BASE_URL or None,
         timeout=LLM_TIMEOUT_SECONDS,
         max_retries=LLM_MAX_RETRIES,
+        model_kwargs={"extra_body": {"enable_thinking": False}},
     )
 
 

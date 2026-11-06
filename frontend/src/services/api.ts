@@ -15,7 +15,8 @@ export const API_BASE_URL =
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 120000,
+  // 生成链路含多次串行外部调用；避免上游变慢时前端先于后端断开
+  timeout: 180000,
 });
 
 export async function generateTrip(payload: TripRequestPayload): Promise<Itinerary> {

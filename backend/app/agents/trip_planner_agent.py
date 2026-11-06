@@ -163,6 +163,8 @@ def _build_chat_llm():
     except ImportError:
         return None
 
+    # qwen3.7-plus 等混合思考模型默认开启 thinking，会先生成大量 reasoning tokens。
+    # 本项目只需要结构化 JSON，显式关闭，避免上游默认行为变更导致延迟与成本失控。
     return ChatOpenAI(
         model=LLM_MODEL,
         temperature=0.3,
@@ -170,6 +172,7 @@ def _build_chat_llm():
         base_url=LLM_BASE_URL or None,
         timeout=LLM_TIMEOUT_SECONDS,
         max_retries=LLM_MAX_RETRIES,
+        model_kwargs={"extra_body": {"enable_thinking": False}},
     )
 
 
