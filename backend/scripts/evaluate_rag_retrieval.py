@@ -3,9 +3,11 @@ from __future__ import annotations
 import argparse
 import json
 import time
+from contextlib import ExitStack
 from pathlib import Path
 import sys
 from typing import Any
+from unittest.mock import patch
 
 
 CURRENT_FILE = Path(__file__).resolve()
@@ -13,7 +15,10 @@ BACKEND_DIR = CURRENT_FILE.parent.parent
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
+from app.agents.tools import rag_tool
 from app.agents.tools.rag_tool import build_destination_query
+from app.config import REDIS_ENABLED
+from app.rag import retriever
 from app.rag.retriever import retrieve_travel_guide_chunks
 
 
@@ -45,7 +50,7 @@ def _evaluate_case(case: dict[str, Any], known_destinations: set[str]) -> dict[s
     destination = str(case["destination"])
     if destination not in known_destinations:
         raise ValueError(f"Unknown evaluation destination: {destination}")
-    query, _ = build_destination_query(
+    query, rewrite_usage = build_destination_query(
         destination=destination,
         preferences=list(case.get("preferences", [])),
         pace=case.get("pace"),
@@ -103,6 +108,8 @@ def _evaluate_case(case: dict[str, Any], known_destinations: set[str]) -> dict[s
         "latency_ms": latency_ms,
         "embedding_prompt_tokens": embedding_usage.get("prompt_tokens", 0),
         "rerank_prompt_tokens": rerank_usage.get("prompt_tokens", 0),
+        "rewrite_prompt_tokens": rewrite_usage.get("prompt_tokens", 0),
+        "rewrite_completion_tokens": rewrite_usage.get("completion_tokens", 0),
         "titles": titles,
     }
 
@@ -124,6 +131,8 @@ def _print_case_result(result: dict[str, Any]) -> None:
     print(f"latency_ms: {result['latency_ms']}")
     print(f"embedding_prompt_tokens: {result['embedding_prompt_tokens']}")
     print(f"rerank_prompt_tokens: {result['rerank_prompt_tokens']}")
+    print(f"rewrite_prompt_tokens: {result['rewrite_prompt_tokens']}")
+    print(f"rewrite_completion_tokens: {result['rewrite_completion_tokens']}")
     print("titles:")
     for index, title in enumerate(result["titles"], start=1):
         print(f"  {index}. {title}")
@@ -140,14 +149,67 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_CASES_PATH,
         help="Path to the RAG eval cases JSON file.",
     )
+    # 消融开关：只改评估脚本这一层，不动 rag_tool / retriever 的生产代码。
+    parser.add_argument(
+        "--no-rewrite",
+        action="store_true",
+        help="Skip LLM query rewrite and use the existing rule-based query fallback.",
+    )
+    parser.add_argument(
+        "--no-rerank",
+        action="store_true",
+        help="Skip rerank and keep the raw vector-retrieval order for the top_k chunks.",
+    )
     return parser
+
+
+def _apply_ablations(stack: ExitStack, no_rewrite: bool, no_rerank: bool) -> None:
+    """在评估进程内临时旁路两个环节，退出 with 时自动还原；不修改生产代码。"""
+    if no_rewrite:
+        # 返回 None 会让 build_destination_query 走已有的规则 query fallback，
+        # 等价于「这次不调用 LLM 改写」，rewrite token 也自然归零。
+        stack.enter_context(
+            patch.object(
+                rag_tool,
+                "llm_rewrite_query",
+                side_effect=lambda **_: (
+                    None, {"prompt_tokens": 0, "completion_tokens": 0}
+                ),
+            )
+        )
+
+    if no_rerank:
+        # 不做重排：直接按向量召回的原始顺序取前 top_k。
+        def _keep_vector_order(query, matched_chunks, top_k, destination=None):
+            return (
+                list(matched_chunks[:top_k]),
+                {"prompt_tokens": 0, "completion_tokens": 0},
+            )
+
+        stack.enter_context(
+            patch.object(retriever, "rerank_guide_chunks", _keep_vector_order)
+        )
+
+
+def _experiment_mode(no_rewrite: bool, no_rerank: bool) -> str:
+    """给每次跑出的数字打上实验组标签，方便开 / 关对照。"""
+    if no_rewrite and no_rerank:
+        return "no-rewrite+no-rerank"
+    if no_rewrite:
+        return "no-rewrite"
+    if no_rerank:
+        return "no-rerank"
+    return "baseline"
 
 
 def main() -> int:
     args = build_parser().parse_args()
     cases = _load_cases(args.cases)
     known_destinations = _collect_case_destinations(cases)
-    results = [_evaluate_case(case, known_destinations) for case in cases]
+
+    with ExitStack() as stack:
+        _apply_ablations(stack, args.no_rewrite, args.no_rerank)
+        results = [_evaluate_case(case, known_destinations) for case in cases]
 
     for result in results:
         _print_case_result(result)
@@ -170,8 +232,16 @@ def main() -> int:
     total_rerank_prompt_tokens = sum(
         int(result["rerank_prompt_tokens"]) for result in results
     )
+    total_rewrite_prompt_tokens = sum(
+        int(result["rewrite_prompt_tokens"]) for result in results
+    )
+    total_rewrite_completion_tokens = sum(
+        int(result["rewrite_completion_tokens"]) for result in results
+    )
 
     print("=== Summary ===")
+    print(f"mode: {_experiment_mode(args.no_rewrite, args.no_rerank)}")
+    print(f"redis_enabled: {str(REDIS_ENABLED).lower()}")
     print(f"cases: {total}")
     print(f"destinations: {'、'.join(sorted(known_destinations))}")
     print(f"top1_title_hit_rate: {top1_hits}/{total} ({top1_hits/total*100:.1f}%)")
@@ -184,6 +254,8 @@ def main() -> int:
     print(f"avg_latency_ms: {avg_latency:.1f}")
     print(f"embedding_prompt_tokens_total: {total_embedding_prompt_tokens}")
     print(f"rerank_prompt_tokens_total: {total_rerank_prompt_tokens}")
+    print(f"rewrite_prompt_tokens_total: {total_rewrite_prompt_tokens}")
+    print(f"rewrite_completion_tokens_total: {total_rewrite_completion_tokens}")
     return 0
 
 
