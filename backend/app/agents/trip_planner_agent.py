@@ -9,6 +9,7 @@ from app.agents.tools.rag_tool import get_destination_guide_context
 from app.config import (
     LLM_API_KEY,
     LLM_BASE_URL,
+    LLM_ENABLE_THINKING,
     LLM_MAX_RETRIES,
     LLM_MODEL,
     LLM_TIMEOUT_SECONDS,
@@ -164,7 +165,8 @@ def _build_chat_llm():
         return None
 
     # qwen3.7-plus 等混合思考模型默认开启 thinking，会先生成大量 reasoning tokens。
-    # 本项目只需要结构化 JSON，显式关闭，避免上游默认行为变更导致延迟与成本失控。
+    # 本项目只需要结构化 JSON，值由 LLM_ENABLE_THINKING 固定（默认 False），
+    # 避免上游默认行为变更导致延迟与成本失控；改 true 可做单变量 A/B 对照。
     return ChatOpenAI(
         model=LLM_MODEL,
         temperature=0.3,
@@ -172,7 +174,7 @@ def _build_chat_llm():
         base_url=LLM_BASE_URL or None,
         timeout=LLM_TIMEOUT_SECONDS,
         max_retries=LLM_MAX_RETRIES,
-        model_kwargs={"extra_body": {"enable_thinking": False}},
+        model_kwargs={"extra_body": {"enable_thinking": LLM_ENABLE_THINKING}},
     )
 
 

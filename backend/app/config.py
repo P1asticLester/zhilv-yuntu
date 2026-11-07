@@ -29,6 +29,9 @@ LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini")
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "")
 LLM_TIMEOUT_SECONDS = int(os.getenv("LLM_TIMEOUT_SECONDS", "60"))
 LLM_MAX_RETRIES = int(os.getenv("LLM_MAX_RETRIES", "1"))
+# 混合思考模型（如 qwen3.7-plus）默认开启 thinking，会额外产生大量 reasoning tokens。
+# 本项目只需要结构化 JSON，默认显式关闭；设为 true 可做单变量 A/B 对照实验。
+LLM_ENABLE_THINKING = os.getenv("LLM_ENABLE_THINKING", "false").lower() == "true"
 
 
 # RAG / 向量库配置
