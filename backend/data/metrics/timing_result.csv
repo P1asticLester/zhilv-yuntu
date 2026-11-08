@@ -1,0 +1,4 @@
+﻿run,status,seconds,trip_id,days,prompt_tokens,completion_tokens,planner_out,error
+1,200,36.42,trip_大理_2026-11-10,3,6006,631,611,
+2,200,28.82,trip_大理_2026-11-10,3,5932,597,583,
+3,200,28.22,trip_大理_2026-11-10,3,6006,653,633,

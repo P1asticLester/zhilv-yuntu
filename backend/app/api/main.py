@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.export import router as export_router
+from app.api.routes.metrics import router as metrics_router
 from app.api.routes.trip import router as trip_router
 from app.api.routes.weather import router as weather_router
 
@@ -45,3 +46,4 @@ def health_check() -> dict[str, str]:
 app.include_router(trip_router)
 app.include_router(export_router)
 app.include_router(weather_router)
+app.include_router(metrics_router)
