@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import sys
 from types import ModuleType
@@ -202,6 +203,10 @@ def test_generate_planner_draft_returns_structured_result_with_mock_llm(monkeypa
         "base_url": "https://example.test",
         "timeout": 60,
         "max_retries": 1,
+        # ① 之后 _build_chat_llm 会固定传 enable_thinking，断言要跟着配置走。
+        "model_kwargs": {
+            "extra_body": {"enable_thinking": trip_planner_agent.LLM_ENABLE_THINKING}
+        },
     }
 
 

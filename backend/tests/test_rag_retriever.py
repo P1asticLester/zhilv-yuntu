@@ -18,7 +18,8 @@ def test_retrieve_travel_guide_formats_chunks_as_text(monkeypatch) -> None:
         query: str, top_k: int = 3
     ) -> tuple[list[dict[str, str]], dict[str, int]]:
         assert query == "大理 古城 美食"
-        assert top_k == 8
+        # 候选召回数 = max(top_k * 2, 6)；本例 top_k=2，所以是 6 不是 8。
+        assert top_k == 6
         return [
             {
                 "source": "dali_guide.md",
