@@ -5,7 +5,15 @@ import re
 
 import httpx
 
-from app.config import LLM_API_KEY, REDIS_RAG_TTL_SECONDS, REDIS_RERANK_TTL_SECONDS, RERANK_MODEL
+from app.config import (
+    CHROMA_COLLECTION_NAME,
+    EMBEDDING_MODEL,
+    KNOWLEDGE_BASE_VERSION,
+    LLM_API_KEY,
+    REDIS_RAG_TTL_SECONDS,
+    REDIS_RERANK_TTL_SECONDS,
+    RERANK_MODEL,
+)
 from app.rag.vector_db import search_guide_chunks_with_usage
 from app.services.cache_service import get_cached_json, set_cached_json
 
@@ -19,6 +27,46 @@ logger = logging.getLogger(__name__)
 def _normalize_cache_text(value: str) -> str:
     """把检索 query 做简单标准化，避免大小写和空格造成重复 key。"""
     return " ".join(value.strip().lower().split())
+
+
+def _cache_version_stamp() -> str:
+    """生成缓存 key 的版本段：模型名 + 知识库版本，任一变化都会让旧缓存失效。
+
+    缓存里存的是「用某个 embedding 模型召回、用某个 rerank 模型排序」的结果。
+    换模型或重建索引后，query / top_k / chunks 都可能不变，旧 key 就会继续
+    命中过期结果（见 docs/mastery/06 的 D8）。因此把四个维度折进 key：
+
+    - EMBEDDING_MODEL：决定召回哪些片段；
+    - RERANK_MODEL：决定片段怎么排序；
+    - CHROMA_COLLECTION_NAME：换集合等于换了一份索引；
+    - KNOWLEDGE_BASE_VERSION：重建索引 / 调整切片后手动 bump 的显式版本号
+      （换模型时上面两项会自动变化，不依赖人工记得改版本号）。
+
+    用短摘要而不是原值拼接：模型名可能带 "/"、":" 等字符，直接拼进 key 会
+    破坏 ":" 分隔结构。版本号保留可读前缀，便于在 Redis 里按版本排查与清理。
+    每次调用都重算当前模块变量，便于契约测试用 monkeypatch 换维度；生产环境
+    这些常量在 import 时从 .env 读取，改配置后需重启进程才生效。
+    """
+    raw = "|".join(
+        (
+            EMBEDDING_MODEL,
+            RERANK_MODEL,
+            CHROMA_COLLECTION_NAME,
+            KNOWLEDGE_BASE_VERSION,
+        )
+    )
+    digest = hashlib.md5(raw.encode("utf-8")).hexdigest()[:12]
+    readable = re.sub(r"[^0-9A-Za-z._-]", "-", KNOWLEDGE_BASE_VERSION)
+    return f"{readable or 'unversioned'}:{digest}"
+
+
+def _build_rag_cache_key(query: str, top_k: int, destination: str | None) -> str:
+    """构造 RAG 结果缓存 key（含版本段）。"""
+    cache_destination = destination or "all"
+    return (
+        f"rag:guide:{_cache_version_stamp()}:{cache_destination}:"
+        f"{_normalize_cache_text(query)}:{top_k}"
+    )
 
 
 def _extract_query_keywords(query: str) -> list[str]:
@@ -245,7 +293,7 @@ def _rerank_with_dashscope(
 
 
 def _build_rerank_cache_key(query: str, chunks: list[dict[str, str]]) -> str:
-    """根据 query 和 chunk 内容生成 rerank 缓存 key。"""
+    """根据 query、chunk 内容和版本段生成 rerank 缓存 key。"""
     """
 query = " 大理 自然风景 "，_normalize_cache_text 处理后得到 "大理 自然风景"。
 
@@ -255,14 +303,19 @@ content_fingerprint = "大理攻略.md:苍山|大理攻略.md:洱海"
 
 chunks_hash = hashlib.md5("大理攻略.md:苍山|大理攻略.md:洱海".encode()).hexdigest()[:12] → 假设得到 "a1b2c3d4e5f6"
 
-最终缓存键："rerank:大理 自然风景:a1b2c3d4e5f6"
+version_stamp = _cache_version_stamp() → 例如 "v1:9f8e7d6c5b4a"（embedding / rerank 模型 + collection + 知识库版本）
+
+最终缓存键："rerank:v1:9f8e7d6c5b4a:大理 自然风景:a1b2c3d4e5f6"
+
+注意：chunks_hash 只覆盖「召回片段的 source:title」，换 rerank 模型或重建索引时
+它可能完全不变；版本段就是用来补这个洞的，否则会命中旧模型算出的排序结果。
     """
     normalized_query = _normalize_cache_text(query)
     content_fingerprint = "|".join(
         f"{c.get('source', '')}:{c.get('title', '')}" for c in chunks
     )
     chunks_hash = hashlib.md5(content_fingerprint.encode()).hexdigest()[:12]
-    return f"rerank:{normalized_query}:{chunks_hash}"
+    return f"rerank:{_cache_version_stamp()}:{normalized_query}:{chunks_hash}"
 
 
 def rerank_guide_chunks(
@@ -344,8 +397,7 @@ def retrieve_travel_guide(
 ) -> tuple[list[str], dict[str, int], dict[str, int]]:
     """返回最相关的攻略片段。返回 (texts, rerank_usage, embedding_usage)。"""
     empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
-    cache_destination = destination or "all"
-    cache_key = f"rag:guide:{cache_destination}:{_normalize_cache_text(query)}:{top_k}"
+    cache_key = _build_rag_cache_key(query, top_k, destination)
     cached_value = get_cached_json(cache_key)
     if cached_value is not None:
         logger.info("rag cache hit: query=%s top_k=%s", query, top_k)

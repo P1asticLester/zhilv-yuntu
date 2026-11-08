@@ -47,6 +47,9 @@ CHROMA_COLLECTION_NAME = os.getenv("CHROMA_COLLECTION_NAME", "travel_guides")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
 EMBEDDING_BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "10"))
 RERANK_MODEL = os.getenv("RERANK_MODEL", "qwen3-rerank")
+# 知识库版本：重建索引、调整切片等「模型名没变但索引变了」的情况需手动 bump。
+# 换 embedding / rerank 模型由版本指纹自动捕获，不必改这里；改动后需重启进程。
+KNOWLEDGE_BASE_VERSION = os.getenv("KNOWLEDGE_BASE_VERSION", "v1")
 
 
 # Redis / 缓存配置
