@@ -1,0 +1,262 @@
+{
+  "meta": {
+    "purpose": "⑤ 5a 生成质量评估体系的配套离线评估集",
+    "warning": "本文件是【离线手工构造的样例】，用于验证评估器 5 条规则的计算逻辑，绝不是真实模型生成结果，也不代表任何生成质量结论。真实评估需把 /trip/generate 的实际响应按同样结构另存为 JSON 后用 --input 指定。",
+    "schema": "cases[] = {id, request{...TripRequest 子集...}, itinerary{...Itinerary 子集...}, note}。评估器只读它需要的字段，缺字段按 0 分处理而不崩溃。",
+    "created": "2026-11-08"
+  },
+  "cases": [
+    {
+      "id": "demo_dali_full_pass",
+      "note": "全部 5 项通过：3 天、预算内、每天 3 个景点、tips 不写死天气、偏好词全命中",
+      "request": {
+        "destination": "大理",
+        "start_date": "2026-04-10",
+        "end_date": "2026-04-12",
+        "travelers": 2,
+        "budget": 3000,
+        "preferences": ["自然风景", "美食"]
+      },
+      "itinerary": {
+        "trip_id": "trip_dali_demo_1",
+        "destination": "大理",
+        "summary": "三天大理慢游，兼顾自然风景与本地美食，节奏轻松。",
+        "estimated_budget": 2600,
+        "budget_breakdown": {"total": 2600},
+        "days": [
+          {
+            "day_index": 1,
+            "theme": "洱海自然风景",
+            "spots": [
+              {"name": "洱海生态廊道", "description": "骑行看湖景"},
+              {"name": "才村码头", "description": "自然风景"},
+              {"name": "龙龛码头", "description": "日出观景点"}
+            ],
+            "notes": ["适合拍照"]
+          },
+          {
+            "day_index": 2,
+            "theme": "古城与美食",
+            "spots": [
+              {"name": "大理古城", "description": "白族美食街区"},
+              {"name": "洋人街", "description": "美食小店"},
+              {"name": "人民路", "description": "咖啡与小吃"}
+            ],
+            "notes": []
+          },
+          {
+            "day_index": 3,
+            "theme": "苍山自然风景",
+            "spots": [
+              {"name": "苍山", "description": "自然风景"},
+              {"name": "崇圣寺三塔", "description": "古迹"},
+              {"name": "三月街", "description": "本地美食"}
+            ],
+            "notes": []
+          }
+        ],
+        "tips": ["提前预订古城附近住宿", "古城内步行更方便"],
+        "source_notes": []
+      }
+    },
+    {
+      "id": "demo_dali_budget_over",
+      "note": "预算不超不通过：estimated_budget 4200 > budget 3000，其余项保持通过",
+      "request": {
+        "destination": "大理",
+        "start_date": "2026-04-10",
+        "end_date": "2026-04-12",
+        "travelers": 2,
+        "budget": 3000,
+        "preferences": ["自然风景", "美食"]
+      },
+      "itinerary": {
+        "trip_id": "trip_dali_demo_2",
+        "destination": "大理",
+        "summary": "自然风景与美食兼顾的三日行程。",
+        "estimated_budget": 4200,
+        "budget_breakdown": {"total": 4200},
+        "days": [
+          {
+            "day_index": 1,
+            "theme": "自然风景",
+            "spots": [{"name": "洱海", "description": "自然风景"}, {"name": "苍山", "description": "自然风景"}],
+            "notes": []
+          },
+          {
+            "day_index": 2,
+            "theme": "美食",
+            "spots": [{"name": "大理古城", "description": "美食"}, {"name": "洋人街", "description": "美食"}],
+            "notes": []
+          },
+          {
+            "day_index": 3,
+            "theme": "自然风景",
+            "spots": [{"name": "喜洲古镇", "description": "自然风景"}, {"name": "海舌公园", "description": "美食"}],
+            "notes": []
+          }
+        ],
+        "tips": ["提前预订住宿"],
+        "source_notes": []
+      }
+    },
+    {
+      "id": "demo_xian_days_short",
+      "note": "天数完整性不通过：期望 3 天只生成 2 天",
+      "request": {
+        "destination": "西安",
+        "start_date": "2026-05-01",
+        "end_date": "2026-05-03",
+        "travelers": 3,
+        "budget": 4000,
+        "preferences": ["历史古迹"]
+      },
+      "itinerary": {
+        "trip_id": "trip_xian_demo_3",
+        "destination": "西安",
+        "summary": "历史古迹主题两日游。",
+        "estimated_budget": 2400,
+        "budget_breakdown": {"total": 2400},
+        "days": [
+          {
+            "day_index": 1,
+            "theme": "历史古迹",
+            "spots": [{"name": "兵马俑", "description": "历史古迹"}, {"name": "华清宫", "description": "历史古迹"}],
+            "notes": []
+          },
+          {
+            "day_index": 2,
+            "theme": "历史古迹",
+            "spots": [{"name": "大雁塔", "description": "历史古迹"}, {"name": "陕西历史博物馆", "description": "历史古迹"}],
+            "notes": []
+          }
+        ],
+        "tips": ["博物馆需提前预约"],
+        "source_notes": []
+      }
+    },
+    {
+      "id": "demo_chengdu_spot_thin",
+      "note": "景点数达标不通过（部分）：第 3 天只有 1 个景点，默认阈值每天 2 个 → 2/3",
+      "request": {
+        "destination": "成都",
+        "start_date": "2026-06-01",
+        "end_date": "2026-06-03",
+        "travelers": 2,
+        "budget": 3500,
+        "preferences": ["美食", "休闲"]
+      },
+      "itinerary": {
+        "trip_id": "trip_chengdu_demo_4",
+        "destination": "成都",
+        "summary": "美食与休闲为主的三日慢游。",
+        "estimated_budget": 2800,
+        "budget_breakdown": {"total": 2800},
+        "days": [
+          {
+            "day_index": 1,
+            "theme": "美食",
+            "spots": [{"name": "宽窄巷子", "description": "美食"}, {"name": "奎星楼街", "description": "美食"}],
+            "notes": []
+          },
+          {
+            "day_index": 2,
+            "theme": "休闲",
+            "spots": [{"name": "人民公园", "description": "休闲茶馆"}, {"name": "锦里", "description": "休闲"}],
+            "notes": []
+          },
+          {
+            "day_index": 3,
+            "theme": "休闲",
+            "spots": [{"name": "杜甫草堂", "description": "休闲"}],
+            "notes": []
+          }
+        ],
+        "tips": ["茶馆早点去有位子"],
+        "source_notes": []
+      }
+    },
+    {
+      "id": "demo_xiamen_weather_hardcoded",
+      "note": "天气提示一致性不通过：后端 tips 写死天气，而架构上天气由独立接口 + 前端 Result.vue 动态增删",
+      "request": {
+        "destination": "厦门",
+        "start_date": "2026-07-01",
+        "end_date": "2026-07-03",
+        "travelers": 2,
+        "budget": 3200,
+        "preferences": ["海岛风光", "文艺打卡"]
+      },
+      "itinerary": {
+        "trip_id": "trip_xiamen_demo_5",
+        "destination": "厦门",
+        "summary": "海岛风光与文艺打卡三日行。",
+        "estimated_budget": 2900,
+        "budget_breakdown": {"total": 2900},
+        "days": [
+          {
+            "day_index": 1,
+            "theme": "海岛风光",
+            "spots": [{"name": "鼓浪屿", "description": "海岛风光"}, {"name": "菽庄花园", "description": "文艺打卡"}],
+            "notes": []
+          },
+          {
+            "day_index": 2,
+            "theme": "文艺打卡",
+            "spots": [{"name": "沙坡尾", "description": "文艺打卡"}, {"name": "南普陀寺", "description": "海岛风光"}],
+            "notes": []
+          },
+          {
+            "day_index": 3,
+            "theme": "海岛风光",
+            "spots": [{"name": "环岛路", "description": "海岛风光"}, {"name": "曾厝垵", "description": "文艺打卡"}],
+            "notes": []
+          }
+        ],
+        "tips": ["天气可能有雨，建议随身带伞", "注意防晒，海边日照强"],
+        "source_notes": []
+      }
+    },
+    {
+      "id": "demo_sanya_pref_miss",
+      "note": "偏好关键词命中不通过：偏好为滑雪/温泉，行程全文未出现",
+      "request": {
+        "destination": "三亚",
+        "start_date": "2026-08-01",
+        "end_date": "2026-08-03",
+        "travelers": 2,
+        "budget": 5000,
+        "preferences": ["滑雪", "温泉"]
+      },
+      "itinerary": {
+        "trip_id": "trip_sanya_demo_6",
+        "destination": "三亚",
+        "summary": "海滨度假三日行。",
+        "estimated_budget": 4500,
+        "budget_breakdown": {"total": 4500},
+        "days": [
+          {
+            "day_index": 1,
+            "theme": "海滩",
+            "spots": [{"name": "亚龙湾", "description": "沙滩"}, {"name": "蜈支洲岛", "description": "海水"}],
+            "notes": []
+          },
+          {
+            "day_index": 2,
+            "theme": "度假",
+            "spots": [{"name": "海棠湾", "description": "酒店"}, {"name": "南山寺", "description": "文化景区"}],
+            "notes": []
+          },
+          {
+            "day_index": 3,
+            "theme": "休闲",
+            "spots": [{"name": "大东海", "description": "海景"}, {"name": "第一市场", "description": "海鲜"}],
+            "notes": []
+          }
+        ],
+        "tips": ["海鲜市场可议价"],
+        "source_notes": []
+      }
+    }
+  ]
+}
