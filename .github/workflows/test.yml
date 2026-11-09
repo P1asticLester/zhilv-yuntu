@@ -1,8 +1,9 @@
 # 4c · 推代码时自动跑后端测试 + 覆盖率门禁
 #
 # 前置：4a 的 backend/tests/conftest.py 已统一 Mock LLM / 高德 / Chroma，
-#       干净机器没有 .env、没有密钥、不通外网也能跑完 92 个测试。
-# 门禁阈值 65：本机（Python 3.13.2 / backend\.venv）实测 69%，留 4pp 余量；
+#       干净机器没有 .env、没有密钥、不通外网也能跑完 110 个测试。
+# 门禁阈值 65：定阈值时本机（Python 3.13.2 / backend\.venv）实测 69.23%，
+#              留 4pp 余量；补测试后当前为 110 passed / 70.29%，余量 5.29pp。
 #              以后补了测试要同步上调，别把阈值当成绩单。
 # 本文件是 4c 的唯一产物：pytest-cov 在 CI 里单独安装，不改 requirements.txt。
 #
