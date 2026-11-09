@@ -4,9 +4,10 @@ import { ref } from "vue";
 import type { Itinerary } from "./types";
 import History from "./views/History.vue";
 import Home from "./views/Home.vue";
+import Metrics from "./views/Metrics.vue";
 import Result from "./views/Result.vue";
 
-const currentView = ref<"home" | "result" | "history">("home");
+const currentView = ref<"home" | "result" | "history" | "metrics">("home");
 const latestItinerary = ref<Itinerary | null>(null);
 
 function handleGenerated(itinerary: Itinerary) {
@@ -54,6 +55,12 @@ function updateCurrentItinerary(itinerary: Itinerary) {
           >
             历史
           </button>
+          <button
+            :class="['nav-tab', { 'nav-tab--active': currentView === 'metrics' }]"
+            @click="currentView = 'metrics'"
+          >
+            成本
+          </button>
         </div>
       </div>
     </header>
@@ -71,9 +78,13 @@ function updateCurrentItinerary(itinerary: Itinerary) {
         @updated="updateCurrentItinerary"
       />
       <History
-        v-else
+        v-else-if="currentView === 'history'"
         :active="currentView === 'history'"
         @open-trip="openTrip"
+      />
+      <Metrics
+        v-else-if="currentView === 'metrics'"
+        :active="currentView === 'metrics'"
       />
     </main>
   </div>

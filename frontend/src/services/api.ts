@@ -2,6 +2,7 @@ import axios from "axios";
 
 import type {
   Itinerary,
+  MetricsDashboardResponse,
   TripDetailResponse,
   TripEditPayload,
   TripListResponse,
@@ -56,6 +57,12 @@ export async function fetchWeatherForecast(city: string): Promise<WeatherForecas
   const response = await api.get<WeatherForecastResponse>("/weather/forecast", {
     params: { city },
   });
+  return response.data;
+}
+
+/** 6b · 只读成本看板数据；任一段缺失时后端返回明确空状态，这里不兜底造数字。 */
+export async function fetchMetricsDashboard(): Promise<MetricsDashboardResponse> {
+  const response = await api.get<MetricsDashboardResponse>("/metrics/dashboard");
   return response.data;
 }
 
