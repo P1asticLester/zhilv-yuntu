@@ -11,6 +11,8 @@
 <details>
 <summary><strong>查看版本更新记录（最新：2026-07-26）</strong></summary>
 
+> **指标口径**：下面 2026-04 ~ 05 的 RAG 命中率与 MRR（Top1 80%→86.7%→93.3%、MRR 0.889→0.922→0.967）均来自 **15 条评估样例时期**；2026-07-18 起评估集扩充为 **18 条**（6 城 × 3）。样本数不同，两组数字不可直接比较。
+
 - `2026-07-26`
   - 动态城市：新增 A/B/C 覆盖分级。6 个已沉淀城市继续走本地 RAG；其他可识别城市在候选充足时，通过高德景点、餐饮和住宿 POI 候选直接生成动态方案。用户已手工验证多个城市可以生成。
   - 真实性约束：动态 Planner 只输出候选 POI ID，服务层校验后回填真实名称、地址、坐标和图片；模型不可用或返回越界 ID 时，也只从本次真实候选池降级。
@@ -73,7 +75,7 @@
 - 📚 **本地攻略检索**：覆盖北京、大理、成都、西安、厦门、三亚 6 个目的地，为行程生成补充对应城市的攻略信息，并避免跨城市内容混入
 - 🌐 **动态城市规划**：未沉淀城市先经过行政区解析，再采集景点、餐饮和住宿 POI；候选达到阈值后生成完整方案，用户已手工验证多个城市可用
 - 🗺️ **高德地图接入**：补充景点地址、经纬度、POI ID、路线距离、耗时和景点图片，并支持虚线箭头路线可视化与 🚩 打卡标记
-- 🌦️ **天气感知提示**：前端展示天气预报，并根据雨天/阴天自动修正旅行提示
+- 🌦️ **天气感知提示**：前端独立调用 `GET /weather/forecast` 展示预报，并由 `Result.vue` 按雨天/阴天对行程 tips 做增删（不参与后端行程生成）
 - ⚡ **Redis 缓存层**：覆盖天气、地图、RAG 检索与 Rerank 结果缓存，减少重复外部调用开销
 - 📊 **Token 消耗统计**：按 Query Rewrite、Query Embedding、Rerank、Planner 分项统计输入/输出 token，并在后端日志与接口响应中返回总量
 - 💰 **预算拆分**：按交通、住宿、餐饮、门票、其他费用拆分，并支持按天展示
@@ -221,7 +223,7 @@ flowchart TD
     class Redis,SQLite storage;
 ```
 
-数据流路径：前端收集用户输入 → 后端解析目的地覆盖等级 → 已沉淀城市走本地 RAG，未沉淀城市采集高德 POI 并进行 ID 受约束规划 → 地图与天气服务补充信息 → 前端展示地图、预算和每日行程 → 用户可保存、编辑、查看历史并导出文档。
+数据流路径：前端收集用户输入 → 后端解析目的地覆盖等级 → 已沉淀城市走本地 RAG，未沉淀城市采集高德 POI 并进行 ID 受约束规划 → 地图信息补全 → 前端展示地图、预算和每日行程 → 用户可保存、编辑、查看历史并导出文档。天气查询是前端另行发起的独立接口 `GET /weather/forecast`，不在这条行程生成链路内。
 
 ### 数据存储与缓存分工
 
@@ -309,7 +311,7 @@ flowchart TD
 **离线阶段**
 
 ```text
-本地 Markdown 攻略 → 按标题切块（49 个片段） → text-embedding-v4 转向量 → 写入 ChromaDB
+本地 Markdown 攻略 → 按标题切块（79 个片段） → text-embedding-v4 转向量 → 写入 ChromaDB
 ```
 
 这一步只做一次，数据入库后就不再动了。
@@ -726,22 +728,19 @@ flowchart TD
         Step1["① RAG 检索"]
         Step2["② LLM 行程生成"]
         Step3["③ 地图信息补全"]
-        Step4["④ 天气查询"]
-        Step5["⑤ 预算拆分"]
+        Step4["④ 预算拆分"]
     end
 
     RAG["rag_tool.py + retriever.py"]
     LLM["trip_planner_agent.py qwen-max"]
     Map["map_service.py 高德地图"]
-    Weather["weather_service.py 高德天气"]
     Result["返回 Itinerary"]
 
     User --> FE --> Route --> TripSvc
     TripSvc --> Step1 --> RAG
     RAG --> Step2 --> LLM
     LLM --> Step3 --> Map
-    Map --> Step4 --> Weather
-    Weather --> Step5 --> Result
+    Map --> Step4 --> Result
     Result -.-> FE -.-> User
 
     classDef user fill:#eef2ff,stroke:#818cf8,color:#111;
@@ -754,10 +753,12 @@ flowchart TD
     class User,FE user;
     class Route route;
     class TripSvc svc;
-    class Step1,Step2,Step3,Step4,Step5 step;
-    class RAG,LLM,Map,Weather ext;
+    class Step1,Step2,Step3,Step4 step;
+    class RAG,LLM,Map ext;
     class Result out;
 ```
+
+> **天气是独立链路，不在 `POST /trip/generate` 里**（上面这张图只画行程生成主链路）：前端拿到行程后另行调用 `GET /weather/forecast`（`weather.py` → `weather_service.py`，结果可走 Redis 缓存），`Result.vue` 再按雨天 / 阴天对已返回的 `tips` 做增删。后端生成行程时**不查天气，也不改写行程内容**。
 
 ### 行程生成
 
@@ -779,10 +780,8 @@ POST /trip/generate
       -> ③ map_service.py（逐景点）
            地理编码 -> POI 搜索 -> 路线估算 -> 图片补充
            （每步都有 Redis 缓存）
-      -> ④ weather_service.py
-           天气预报查询（Redis 缓存）
-      -> ⑤ 预算拆分计算
-      -> ⑥ 记录 token_usage（Query Rewrite / Query Embedding / Rerank / Planner / Total）
+      -> ④ 预算拆分计算
+      -> ⑤ 记录 token_usage（Query Rewrite / Query Embedding / Rerank / Planner / Total）
       -> 返回 Itinerary
 ```
 
@@ -810,7 +809,7 @@ POST /trip/save
 
 GET /export/{trip_id}/markdown
   -> storage_service.py 读取 itinerary
-  -> export_service.py -> Jinja2 渲染 Markdown
+  -> export_service.py -> f-string 拼接 Markdown（非 Jinja2）
 
 GET /export/{trip_id}/pdf
   -> storage_service.py 读取 itinerary
@@ -880,8 +879,8 @@ cd frontend
 - ✅ **缓存与工程化能力**
   已完成 Redis 缓存层，覆盖天气查询、地图查询、RAG 检索结果与 Rerank 结果缓存；后续可扩展到会话态管理、热点目的地复用与更细粒度的缓存命中统计。
 - ✅ **RAG 检索增强**
-  - ✅ 规则级 Query Rewrite → LLM-based Query Rewrite（qwen-max），Top1 80%→86.7%，MRR 0.889→0.922。
-  - ✅ 规则级 Rerank → Cross-encoder Rerank（qwen3-rerank）+ 噪声预过滤 + Rerank 缓存，Top1 86.7%→93.3%，MRR 0.922→0.967。
+  - ✅ 规则级 Query Rewrite → LLM-based Query Rewrite（qwen-max），Top1 80%→86.7%，MRR 0.889→0.922。（15 条样例时期，当前 18 条）
+  - ✅ 规则级 Rerank → Cross-encoder Rerank（qwen3-rerank）+ 噪声预过滤 + Rerank 缓存，Top1 86.7%→93.3%，MRR 0.922→0.967。（15 条样例时期，当前 18 条）
   - ✅ 知识库已覆盖 6 个目的地，评估样例集 18 条；规则、fallback、评估断言与目的地 metadata 已有离线一致性校验。模型账户恢复后需重新执行真实 RAG 评估，建立新的在线质量基线。
 - 🚧 **Token 成本分析看板**
   已完成后端 token 统计与 `/trip/stats` 汇总接口，后续可在前端增加成本分析面板，对比不同 RAG 策略下的 token 消耗、延迟和生成质量。
