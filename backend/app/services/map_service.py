@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
 import httpx
@@ -10,6 +11,7 @@ from app.config import (
     AMAP_BASE_URL,
     AMAP_DEFAULT_CITY,
     AMAP_TIMEOUT_SECONDS,
+    MAP_ENRICH_MAX_WORKERS,
     REDIS_MAP_TTL_SECONDS,
 )
 from app.models.schemas import HotelItem, Itinerary, SpotItem, TransportItem
@@ -468,32 +470,75 @@ def _enrich_transport(transport: TransportItem, city: str | None = None) -> bool
     return True
 
 
-def enrich_itinerary_with_map_data(itinerary: Itinerary, city: str | None = None) -> Itinerary:
-    """使用高德服务补全 itinerary 里的地图字段。"""
-    enriched_count = 0
+# (补全函数, 待补全的 Pydantic 对象, 日志里用的可读标签)
+EnrichTask = tuple[Any, Any, str]
 
+
+def _collect_enrich_tasks(itinerary: Itinerary) -> list[EnrichTask]:
+    """把行程里每个待补全对象收成互不依赖的任务。
+
+    每个任务只修改自己的 spot / hotel / transport 对象，彼此不共享可变状态，
+    这是并行安全的前提。函数对象按名字在运行时解析，测试可用 monkeypatch 替换。
+    """
+    tasks: list[EnrichTask] = []
     for day in itinerary.days:
         for spot in day.spots:
-            try:
-                if _enrich_spot(spot, city=city or itinerary.destination):
-                    enriched_count += 1
-            except Exception:
-                continue
+            tasks.append((_enrich_spot, spot, f"景点 {spot.name}"))
 
         if day.hotel is not None:
-            try:
-                if _enrich_hotel(day.hotel, city=city or itinerary.destination):
-                    enriched_count += 1
-            except Exception:
-                pass
+            tasks.append((_enrich_hotel, day.hotel, f"酒店 {day.hotel.name}"))
 
         for transport in day.transport:
-            try:
-                if _enrich_transport(transport, city=city or itinerary.destination):
-                    enriched_count += 1
-            except Exception:
-                continue
+            tasks.append((
+                _enrich_transport,
+                transport,
+                f"交通 {transport.from_place} -> {transport.to_place}",
+            ))
+    return tasks
 
+
+def _run_enrich_task(task: EnrichTask, city: str | None) -> bool:
+    """执行单个补全任务；任何失败只让这一项降级，不拖垮整份行程。
+
+    日志只记异常类型、不记异常文本：高德请求 URL 里带 API Key，
+    原始异常信息有可能把它带进日志。改造前这里是完全静默的 continue/pass。
+    """
+    enrich_fn, item, label = task
+    try:
+        return bool(enrich_fn(item, city=city))
+    except Exception as exc:
+        logger.warning("地图 enrich 单项失败（%s）：%s", label, type(exc).__name__)
+        return False
+
+
+def enrich_itinerary_with_map_data(itinerary: Itinerary, city: str | None = None) -> Itinerary:
+    """使用高德服务补全 itinerary 里的地图字段。
+
+    ② 并行化：十几次高德调用几乎全在等网络回包（I/O 密集），
+    用最多 MAP_ENRICH_MAX_WORKERS 路并发，把串行等待压成「等最慢的那一个」。
+    该值设为 1 时走原来的串行分支，行为与改造前完全一致，便于单变量 A/B。
+    并发上限同时充当 QPS 闸门；429 等单项失败由 _run_enrich_task 降级隔离。
+    """
+    resolved_city = city or itinerary.destination
+    tasks = _collect_enrich_tasks(itinerary)
+
+    if MAP_ENRICH_MAX_WORKERS <= 1 or not tasks:
+        results = [_run_enrich_task(task, resolved_city) for task in tasks]
+    else:
+        with ThreadPoolExecutor(max_workers=MAP_ENRICH_MAX_WORKERS) as executor:
+            futures = [
+                executor.submit(_run_enrich_task, task, resolved_city)
+                for task in tasks
+            ]
+            results = []
+            for future in as_completed(futures):
+                try:
+                    results.append(bool(future.result()))
+                except Exception:  # 兜底：任务自身异常也不能影响其余行程
+                    results.append(False)
+
+    # 计数器由主线程汇总，不在工作线程里累加，避免竞态。
+    enriched_count = sum(results)
     if enriched_count > 0:
         note = "已补充高德地图地址、坐标或路线估算信息。"
         if note not in itinerary.source_notes:

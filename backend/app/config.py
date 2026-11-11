@@ -10,6 +10,21 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BACKEND_DIR / ".env")
 
 
+def _bounded_int_env(name: str, default: int, minimum: int, maximum: int) -> int:
+    """读取整数型环境变量；缺失、非法或越界时回退默认值。
+
+    用于并发度这类「手误会直接打爆上游」的配置：不让 0 / 负数 / 超大值
+    或非数字导致进程启动即崩，也不静默接受一个危险的值。
+    """
+    try:
+        value = int(os.getenv(name, ""))
+    except (TypeError, ValueError):
+        return default
+    if value < minimum or value > maximum:
+        return default
+    return value
+
+
 # 数据库配置
 DB_DIR = BACKEND_DIR / "db"
 DB_DIR.mkdir(parents=True, exist_ok=True)
@@ -69,3 +84,6 @@ AMAP_BASE_URL = os.getenv("AMAP_BASE_URL", "https://restapi.amap.com/v3")
 AMAP_DEFAULT_CITY = os.getenv("AMAP_DEFAULT_CITY", "")
 AMAP_TIMEOUT_SECONDS = int(os.getenv("AMAP_TIMEOUT_SECONDS", "20"))
 ENABLE_AMAP_ENRICHMENT = os.getenv("ENABLE_AMAP_ENRICHMENT", "false").lower() == "true"
+# ② 地图 enrich 并行度：这些调用几乎全在等网络回包，线程池能显著缩短耗时。
+# 设为 1 即回到原来的串行行为，方便做单变量 A/B；上限 16 是给高德 QPS 的闸门。
+MAP_ENRICH_MAX_WORKERS = _bounded_int_env("MAP_ENRICH_MAX_WORKERS", 6, 1, 16)
