@@ -85,5 +85,7 @@ AMAP_DEFAULT_CITY = os.getenv("AMAP_DEFAULT_CITY", "")
 AMAP_TIMEOUT_SECONDS = int(os.getenv("AMAP_TIMEOUT_SECONDS", "20"))
 ENABLE_AMAP_ENRICHMENT = os.getenv("ENABLE_AMAP_ENRICHMENT", "false").lower() == "true"
 # ② 地图 enrich 并行度：这些调用几乎全在等网络回包，线程池能显著缩短耗时。
-# 设为 1 即回到原来的串行行为，方便做单变量 A/B；上限 16 是给高德 QPS 的闸门。
-MAP_ENRICH_MAX_WORKERS = _bounded_int_env("MAP_ENRICH_MAX_WORKERS", 6, 1, 16)
+# 默认 3 来自 2026-11-11 的同环境 A/B：3 路零降级、端到端中位数 -28.1%；
+# 6 路虽更快但触发 8 项高德降级（字段没补上），因此不作为默认值。
+# 设为 1 即回到原来的串行行为，方便做单变量 A/B；上限 16 只是防止手误打爆上游。
+MAP_ENRICH_MAX_WORKERS = _bounded_int_env("MAP_ENRICH_MAX_WORKERS", 3, 1, 16)

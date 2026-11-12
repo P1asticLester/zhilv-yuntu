@@ -231,21 +231,21 @@ def _workers_with_env(monkeypatch, raw_value):
 @pytest.mark.parametrize(
     ("raw_value", "expected"),
     [
-        (None, 6),
+        (None, 3),
         ("1", 1),
         ("8", 8),
-        ("0", 6),
-        ("-1", 6),
-        ("abc", 6),
-        ("99", 6),
-        ("", 6),
+        ("0", 3),
+        ("-1", 3),
+        ("abc", 3),
+        ("99", 3),
+        ("", 3),
     ],
     ids=[
-        "unset-default-6", "serial-1", "explicit-8", "zero-falls-back",
+        "unset-default-3", "serial-1", "explicit-8", "zero-falls-back",
         "negative-falls-back", "garbage-falls-back", "too-large-falls-back",
         "empty-falls-back",
     ],
 )
 def test_map_enrich_workers_env_parsing(monkeypatch, raw_value, expected):
-    """默认 6；1 可回退串行；非法 / 越界值一律回退，不打爆上游 QPS。"""
+    """默认 3（实测零降级）；1 可回退串行；非法 / 越界值一律回退，不打爆上游 QPS。"""
     assert _workers_with_env(monkeypatch, raw_value) == expected
