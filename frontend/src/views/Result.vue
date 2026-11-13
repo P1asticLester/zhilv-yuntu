@@ -180,14 +180,11 @@ async function handleEdit() {
     <!-- 侧边栏 -->
     <aside class="sidebar">
       <div class="sidebar__section">
-        <div class="sidebar__label">操作</div>
         <button class="ios-btn ios-btn--text" @click="$emit('backHome')">← 返回规划</button>
         <button class="ios-btn ios-btn--text" :disabled="saving" @click="handleSave">{{ saving ? "保存中..." : "保存行程" }}</button>
         <button class="ios-btn ios-btn--text" @click="$emit('viewHistory')">历史列表</button>
       </div>
-      <div class="sidebar__divider" />
       <div class="sidebar__section">
-        <div class="sidebar__label">导出</div>
         <button class="ios-btn ios-btn--text" :disabled="exportingPdf" @click="openPdfExport">{{ exportingPdf ? "准备中..." : "导出 PDF" }}</button>
         <button class="ios-btn ios-btn--text" :disabled="exportingMarkdown" @click="openMarkdownExport">{{ exportingMarkdown ? "准备中..." : "导出 Markdown" }}</button>
       </div>
@@ -339,10 +336,12 @@ async function handleEdit() {
   align-self: start;
   position: sticky;
   top: 76px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   padding: 16px;
   border-radius: 12px;
   background: #FFFFFF;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .sidebar__section {
@@ -351,23 +350,7 @@ async function handleEdit() {
   gap: 4px;
 }
 
-.sidebar__label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #8E8E93;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 4px 8px;
-  margin-bottom: 4px;
-}
-
-.sidebar__divider {
-  height: 0.5px;
-  background: rgba(0, 0, 0, 0.06);
-  margin: 8px 0;
-}
-
-/* iOS 按钮 */
+/* 按钮 */
 .ios-btn {
   border: none;
   border-radius: 8px;
@@ -375,26 +358,24 @@ async function handleEdit() {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
   text-align: left;
 }
 
-.ios-btn:active { transform: scale(0.97); }
 .ios-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .ios-btn--text {
   background: transparent;
-  color: #007AFF;
+  color: #0E9A93;
 }
 
 .ios-btn--primary {
-  background: #007AFF;
+  background: #0E9A93;
   color: #FFFFFF;
 }
 
 .ios-btn--sm {
   padding: 8px 16px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 /* 主内容 */
@@ -404,12 +385,11 @@ async function handleEdit() {
   gap: 12px;
 }
 
-/* iOS 卡片 */
+/* 卡片 */
 .ios-card {
   padding: 20px;
   border-radius: 12px;
   background: #FFFFFF;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .ios-card--full { grid-column: 1 / -1; }
@@ -423,12 +403,10 @@ async function handleEdit() {
 }
 
 .ios-card__header {
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
   color: #1C1C1E;
   margin-bottom: 14px;
-  padding-bottom: 10px;
-  border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
 }
 
 /* 信息行 */
@@ -436,7 +414,6 @@ async function handleEdit() {
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
-  border-bottom: 0.5px solid rgba(0, 0, 0, 0.04);
   font-size: 14px;
   color: #3C3C43;
 }
@@ -450,7 +427,7 @@ async function handleEdit() {
   color: #3C3C43;
 }
 
-.ios-muted { color: #8E8E93; font-size: 13px; }
+.ios-muted { color: #8E8E93; font-size: 14px; }
 
 /* 旅行提示 */
 .ios-tips {
@@ -460,8 +437,8 @@ async function handleEdit() {
   background: #F2F2F7;
 }
 
-.ios-tips__title { font-size: 13px; font-weight: 600; color: #3C3C43; margin-bottom: 8px; }
-.ios-tips ul { margin: 0; padding-left: 18px; font-size: 13px; color: #636366; line-height: 1.8; }
+.ios-tips__title { font-size: 14px; font-weight: 600; color: #3C3C43; margin-bottom: 8px; }
+.ios-tips ul { margin: 0; padding-left: 18px; font-size: 14px; color: #636366; line-height: 1.8; }
 
 /* 预算 */
 .ios-budget-grid {
@@ -478,8 +455,8 @@ async function handleEdit() {
   background: #F2F2F7;
 }
 
-.ios-budget-item__label { font-size: 13px; color: #8E8E93; }
-.ios-budget-item__value { font-size: 15px; font-weight: 600; color: #007AFF; }
+.ios-budget-item__label { font-size: 14px; color: #8E8E93; }
+.ios-budget-item__value { font-size: 14px; font-weight: 600; color: #1C1C1E; }
 
 .ios-budget-total {
   display: flex;
@@ -488,9 +465,9 @@ async function handleEdit() {
   margin-top: 12px;
   padding: 14px 16px;
   border-radius: 10px;
-  background: #007AFF;
-  color: #FFFFFF;
-  font-size: 15px;
+  background: #F2F2F7;
+  color: #1C1C1E;
+  font-size: 14px;
 }
 
 .ios-budget-total strong { font-size: 22px; }
@@ -507,9 +484,9 @@ async function handleEdit() {
   background: #F2F2F7;
 }
 
-.ios-weather-item__date { font-size: 13px; font-weight: 600; color: #3C3C43; min-width: 60px; }
-.ios-weather-item__temp { font-size: 18px; font-weight: 700; color: #007AFF; min-width: 80px; }
-.ios-weather-item__desc { font-size: 13px; color: #636366; }
+.ios-weather-item__date { font-size: 14px; font-weight: 600; color: #3C3C43; min-width: 60px; }
+.ios-weather-item__temp { font-size: 17px; font-weight: 700; color: #1C1C1E; min-width: 80px; }
+.ios-weather-item__desc { font-size: 14px; color: #636366; }
 
 .ios-empty { font-size: 14px; color: #8E8E93; }
 
@@ -533,7 +510,7 @@ async function handleEdit() {
   outline: none;
 }
 
-.ios-select:focus { border-color: #007AFF; }
+.ios-select:focus { border-color: #0E9A93; }
 
 .ios-textarea {
   width: 100%;
@@ -548,7 +525,7 @@ async function handleEdit() {
   font-family: inherit;
 }
 
-.ios-textarea:focus { border-color: #007AFF; }
+.ios-textarea:focus { border-color: #0E9A93; }
 
 /* 按天花费 */
 .ios-day-budget-grid {
@@ -560,7 +537,6 @@ async function handleEdit() {
 .ios-day-budget {
   border-radius: 10px;
   overflow: hidden;
-  border: 0.5px solid rgba(0, 0, 0, 0.06);
 }
 
 .ios-day-budget__head {
@@ -568,7 +544,7 @@ async function handleEdit() {
   justify-content: space-between;
   padding: 10px 12px;
   background: #F2F2F7;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #3C3C43;
 }
@@ -582,7 +558,7 @@ async function handleEdit() {
 .ios-row-between {
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: 14px;
   color: #636366;
 }
 
@@ -603,7 +579,6 @@ async function handleEdit() {
 .ios-point {
   border-radius: 10px;
   overflow: hidden;
-  border: 0.5px solid rgba(0, 0, 0, 0.06);
 }
 
 .ios-point__head {
@@ -611,7 +586,7 @@ async function handleEdit() {
   justify-content: space-between;
   padding: 10px 12px;
   background: #F2F2F7;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #3C3C43;
 }
@@ -627,19 +602,18 @@ async function handleEdit() {
 .ios-point__img--empty {
   display: grid;
   place-items: center;
-  font-size: 13px;
+  font-size: 14px;
   color: #8E8E93;
 }
 
-.ios-point__info { padding: 6px 12px 0; font-size: 13px; color: #3C3C43; }
-.ios-point__desc { padding: 8px 12px 12px; font-size: 13px; color: #636366; line-height: 1.6; }
+.ios-point__info { padding: 6px 12px 0; font-size: 14px; color: #3C3C43; }
+.ios-point__desc { padding: 8px 12px 12px; font-size: 14px; color: #636366; line-height: 1.6; }
 
 /* 每日行程 */
 .ios-day-list { display: grid; gap: 8px; }
 
 .ios-day {
   border-radius: 10px;
-  border: 0.5px solid rgba(0, 0, 0, 0.06);
   overflow: hidden;
 }
 

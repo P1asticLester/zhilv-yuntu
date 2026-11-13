@@ -77,14 +77,12 @@ function renderMarkers() {
       offset: new window.AMap.Pixel(-12, -28),
       content: `
         <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
-          <div style="font-size:22px;line-height:1;">🚩</div>
           <div style="
-            margin-top:2px;
             padding:2px 7px;
-            border-radius:999px;
-            background:linear-gradient(135deg,#6d82de,#8a67cf);
+            border-radius:6px;
+            background:#0E9A93;
             color:#fff;
-            font-size:11px;
+            font-size:12px;
             font-weight:700;
             white-space:nowrap;
             box-shadow:0 2px 6px rgba(0,0,0,0.18);
@@ -95,7 +93,7 @@ function renderMarkers() {
 
     const imageHtml = point.imageUrl
       ? `<img src="${point.imageUrl}" alt="${point.name}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" />`
-      : `<div style="width:100%;height:100%;display:grid;place-items:center;border-radius:8px;background:linear-gradient(135deg,#e8edff,#f0e8ff);color:#8b8fad;font-size:10px;">暂无图片</div>`;
+      : `<div style="width:100%;height:100%;display:grid;place-items:center;border-radius:8px;background:#F2F2F7;color:#8E8E93;font-size:12px;">暂无图片</div>`;
 
     const bubble = new window.AMap.Marker({
       position,
@@ -110,11 +108,11 @@ function renderMarkers() {
           overflow:hidden;
           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         ">
-          <div style="width:110px;height:72px;overflow:hidden;background:#eef3ff;">
+          <div style="width:110px;height:72px;overflow:hidden;background:#F2F2F7;">
             ${imageHtml}
           </div>
           <div style="padding:5px 8px 6px;">
-            <div style="font-size:11px;font-weight:600;color:#2d3748;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${point.name}</div>
+            <div style="font-size:12px;font-weight:600;color:#1C1C1E;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${point.name}</div>
           </div>
           <div style="
             position:absolute;
@@ -156,7 +154,7 @@ function renderMarkers() {
   if (routePath.length >= 2) {
     routeLine.value = new window.AMap.Polyline({
       path: routePath,
-      strokeColor: "#6d82de",
+      strokeColor: "#0E9A93",
       strokeWeight: 3,
       strokeOpacity: 0.8,
       strokeStyle: "dashed",
@@ -164,10 +162,10 @@ function renderMarkers() {
       lineJoin: "round",
       lineCap: "round",
       showDir: true,
-      dirColor: "#6d82de",
+      dirColor: "#0E9A93",
       dirSize: 8,
       borderWeight: 1,
-      borderColor: "rgba(109,130,222,0.25)",
+      borderColor: "rgba(14,154,147,0.25)",
       zIndex: 50,
     });
     mapInstance.value.add(routeLine.value);
@@ -297,21 +295,19 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: 10px;
   padding: 20px;
-  background:
-    linear-gradient(135deg, rgba(129, 179, 255, 0.18), rgba(137, 108, 230, 0.15)),
-    linear-gradient(45deg, rgba(255, 255, 255, 0.75), rgba(244, 247, 255, 0.9));
-  color: #5b6474;
+  background: #F2F2F7;
+  color: #8E8E93;
   text-align: center;
 }
 
 .trip-map__placeholder strong {
   font-size: 22px;
-  color: #4b5563;
+  color: #1C1C1E;
 }
 
 .trip-map__placeholder span {
   max-width: 360px;
-  color: #7b8494;
+  color: #636366;
   line-height: 1.7;
 }
 </style>

@@ -115,9 +115,7 @@ function updateCurrentItinerary(itinerary: Itinerary) {
   left: 0;
   right: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  background: #FFFFFF;
   border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -151,20 +149,14 @@ function updateCurrentItinerary(itinerary: Itinerary) {
   padding: 6px 16px;
   background: transparent;
   color: #8E8E93;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.nav-tab:active {
-  transform: scale(0.97);
 }
 
 .nav-tab--active {
   background: #FFFFFF;
   color: #1C1C1E;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .nav-tab--disabled {
@@ -189,7 +181,7 @@ function updateCurrentItinerary(itinerary: Itinerary) {
   }
 
   .nav-bar__title {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .page-content {

@@ -73,7 +73,6 @@ watch(() => props.active, (active) => {
     <div class="ios-card history-header">
       <div>
         <h2 class="history-header__title">历史行程</h2>
-        <p class="history-header__desc">已保存到数据库的行程记录</p>
       </div>
       <button class="ios-btn ios-btn--primary ios-btn--sm" @click="loadTrips">刷新</button>
     </div>
@@ -114,16 +113,10 @@ watch(() => props.active, (active) => {
 }
 
 .history-header__title {
-  margin: 0 0 4px;
+  margin: 0;
   font-size: 22px;
   font-weight: 700;
   color: #1C1C1E;
-}
-
-.history-header__desc {
-  margin: 0;
-  font-size: 14px;
-  color: #8E8E93;
 }
 
 /* 卡片 */
@@ -131,7 +124,6 @@ watch(() => props.active, (active) => {
   padding: 20px;
   border-radius: 12px;
   background: #FFFFFF;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .ios-empty {
@@ -149,15 +141,13 @@ watch(() => props.active, (active) => {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
-.ios-btn:active { transform: scale(0.97); }
 .ios-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.ios-btn--primary { background: #007AFF; color: #FFFFFF; }
-.ios-btn--danger { background: #FF3B30; color: #FFFFFF; }
-.ios-btn--sm { padding: 6px 14px; font-size: 13px; }
+.ios-btn--primary { background: #0E9A93; color: #FFFFFF; }
+.ios-btn--danger { background: #FFFFFF; color: #1C1C1E; border: 1px solid #D1D1D6; }
+.ios-btn--sm { padding: 6px 14px; font-size: 14px; }
 
 /* 列表 */
 .history-grid {
@@ -201,7 +191,6 @@ watch(() => props.active, (active) => {
   gap: 8px;
   margin-top: auto;
   padding-top: 12px;
-  border-top: 0.5px solid rgba(0, 0, 0, 0.06);
 }
 
 @media (max-width: 768px) {
