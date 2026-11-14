@@ -12,6 +12,7 @@ from app.config import (
     REDIS_WEATHER_TTL_SECONDS,
 )
 from app.services.cache_service import get_cached_json, set_cached_json
+from app.services.amap_client import build_client, has_amap_api_key, normalize_cache_text
 from app.services.map_service import geocode_address
 
 
@@ -20,13 +21,13 @@ logger = logging.getLogger(__name__)
 
 def _ensure_amap_api_key() -> None:
     """确保当前环境已经配置高德地图 Key。"""
-    if not AMAP_API_KEY:
+    if not has_amap_api_key(AMAP_API_KEY):
         raise RuntimeError("当前环境未配置 AMAP_API_KEY，无法调用天气服务。")
 
 
 def _build_client() -> httpx.Client:
-    """创建访问高德天气 API 的客户端。"""
-    return httpx.Client(timeout=AMAP_TIMEOUT_SECONDS)
+    """保留模块级入口；构造细节统一在 amap_client。"""
+    return build_client(AMAP_TIMEOUT_SECONDS)
 
 
 def _request_amap_weather(path: str, params: dict[str, Any]) -> dict[str, Any]:
@@ -51,10 +52,8 @@ def _request_amap_weather(path: str, params: dict[str, Any]) -> dict[str, Any]:
 
 
 def _normalize_cache_text(value: str | None) -> str:
-    """把缓存 key 里用到的文本做简单标准化。"""
-    if value is None:
-        return ""
-    return value.strip().lower()
+    """保留模块级入口；标准化逻辑统一在 amap_client。"""
+    return normalize_cache_text(value)
 
 
 def get_weather_forecast(city: str) -> dict[str, Any]:

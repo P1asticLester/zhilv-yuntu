@@ -15,6 +15,8 @@ from app.config import (
     REDIS_MAP_TTL_SECONDS,
 )
 from app.models.schemas import HotelItem, Itinerary, SpotItem, TransportItem
+from app.services.amap_client import build_client, has_amap_api_key, normalize_cache_text
+from app.text_utils import format_minutes
 from app.services.cache_service import get_cached_json, set_cached_json
 
 
@@ -31,7 +33,7 @@ class AmapServiceError(RuntimeError):
 
 def _ensure_amap_api_key() -> None:
     """确保当前环境已经配置高德地图 Key。"""
-    if not AMAP_API_KEY:
+    if not has_amap_api_key(AMAP_API_KEY):
         raise AmapServiceError(
             "当前环境未配置 AMAP_API_KEY，无法调用高德地图服务。",
             reason="missing_api_key",
@@ -39,8 +41,8 @@ def _ensure_amap_api_key() -> None:
 
 
 def _build_client() -> httpx.Client:
-    """创建访问高德 HTTP API 的客户端。"""
-    return httpx.Client(timeout=AMAP_TIMEOUT_SECONDS)
+    """保留模块级入口供测试替换；构造细节统一在 amap_client。"""
+    return build_client(AMAP_TIMEOUT_SECONDS)
 
 
 def _request_amap(path: str, params: dict[str, Any]) -> dict[str, Any]:
@@ -115,10 +117,8 @@ def _split_location(location: str | None) -> tuple[float | None, float | None]:
 
 
 def _normalize_cache_text(value: str | None) -> str:
-    """把缓存 key 里用到的文本做简单标准化。"""
-    if value is None:
-        return ""
-    return value.strip().lower()
+    """保留模块级入口；标准化逻辑统一在 amap_client。"""
+    return normalize_cache_text(value)
 
 
 def geocode_address(address: str, city: str | None = None) -> dict[str, Any] | None:
@@ -466,7 +466,7 @@ def _enrich_transport(transport: TransportItem, city: str | None = None) -> bool
     transport.distance_km = route.get("distance_km")
     transport.estimated_minutes = route.get("estimated_minutes")
     if route.get("estimated_minutes") is not None and not transport.duration:
-        transport.duration = f"{route['estimated_minutes']} 分钟"
+        transport.duration = format_minutes(route['estimated_minutes'])
     return True
 
 

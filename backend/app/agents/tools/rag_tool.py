@@ -2,6 +2,8 @@ import json
 import logging
 from functools import lru_cache
 
+from app.agents.llm_client import build_chat_llm, empty_token_usage, extract_token_usage
+from app.text_utils import append_unique
 from app.config import (
     BACKEND_DIR,
     LLM_API_KEY,
@@ -20,14 +22,6 @@ RETRIEVAL_RULES_PATH = BACKEND_DIR / "data" / "retrieval_rules.json"
 
 # rag_tool.py 自己不直接检索，
 # 它只负责把"旅行规划语义"转成"检索查询"。
-def _append_unique(parts: list[str], value: str) -> None:
-    normalized = value.strip()
-    if not normalized:
-        return
-    if normalized not in parts:
-        parts.append(normalized)
-
-
 @lru_cache(maxsize=1)
 def _load_retrieval_rules() -> dict:
     """读取版本化检索规则；配置损坏时保持空规则，避免阻断主链路。"""
@@ -94,40 +88,22 @@ def _extract_note_keywords(special_notes: str | None, destination: str | None = 
     for rule in _destination_rules(destination):
         if any(trigger in note for trigger in rule["triggers"]):
             for value in rule["keywords"]:
-                _append_unique(keywords, value)
+                append_unique(keywords, value)
 
     return keywords
 
 
 def _build_chat_llm():
-    """创建 ChatOpenAI 实例，用于 Query Rewrite。"""
-    if not LLM_API_KEY:
-        return None
-    try:
-        from langchain_openai import ChatOpenAI
-    except ImportError:
-        return None
-    # 与 trip_planner_agent 保持一致：由 LLM_ENABLE_THINKING 固定上游默认行为。
-    return ChatOpenAI(
+    """Query Rewrite 的 LLM 构造入口；细节统一在 llm_client。"""
+    return build_chat_llm(
         model=LLM_MODEL,
         temperature=0.2,
         api_key=LLM_API_KEY,
-        base_url=LLM_BASE_URL or None,
+        base_url=LLM_BASE_URL,
         timeout=LLM_TIMEOUT_SECONDS,
         max_retries=LLM_MAX_RETRIES,
-        model_kwargs={"extra_body": {"enable_thinking": LLM_ENABLE_THINKING}},
+        enable_thinking=LLM_ENABLE_THINKING,
     )
-
-
-def _extract_token_usage(response) -> dict[str, int]:
-    """从 LangChain AIMessage 中提取 token 使用量。"""
-    usage = {"prompt_tokens": 0, "completion_tokens": 0}
-    metadata = getattr(response, "response_metadata", None) or {}
-    token_usage = metadata.get("token_usage", {})
-    if token_usage:
-        usage["prompt_tokens"] = token_usage.get("prompt_tokens", 0)
-        usage["completion_tokens"] = token_usage.get("completion_tokens", 0)
-    return usage
 
 
 def llm_rewrite_query(
@@ -137,7 +113,7 @@ def llm_rewrite_query(
     special_notes: str | None = None,
 ) -> tuple[str | None, dict[str, int]]:
     """用 LLM 把用户旅行需求改写成适合向量检索的 query。返回 (query, token_usage)。"""
-    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
+    empty_usage = empty_token_usage()
     llm = _build_chat_llm()
     if llm is None:
         return None, empty_usage
@@ -166,7 +142,7 @@ def llm_rewrite_query(
             ("system", system_prompt),
             ("human", human_prompt),
         ])
-        token_usage = _extract_token_usage(response)
+        token_usage = extract_token_usage(response)
         raw_text = getattr(response, "content", "")
         if isinstance(raw_text, list):
             raw_text = "".join(
@@ -194,16 +170,16 @@ def _rule_based_query(
 
     if preferences:
         for preference in preferences:
-            _append_unique(parts, preference)
+            append_unique(parts, preference)
 
     if pace:
-        _append_unique(parts, pace)
+        append_unique(parts, pace)
 
     for keyword in _extract_note_keywords(special_notes, destination=destination):
-        _append_unique(parts, keyword)
+        append_unique(parts, keyword)
 
     for stable_term in ["景点", "行程", "攻略", "推荐", "餐饮", "住宿"]:
-        _append_unique(parts, stable_term)
+        append_unique(parts, stable_term)
 
     return " ".join(part for part in parts if part).strip()
 
@@ -230,22 +206,7 @@ def build_destination_query(
         preferences=preferences,
         pace=pace,
         special_notes=special_notes,
-    ), {"prompt_tokens": 0, "completion_tokens": 0}
-
-
-def _build_destination_query(
-    destination: str,
-    preferences: list[str] | None = None,
-    pace: str | None = None,
-    special_notes: str | None = None,
-) -> tuple[str, dict[str, int]]:
-    """兼容旧调用，内部转到公开的 query 构造函数。"""
-    return build_destination_query(
-        destination=destination,
-        preferences=preferences,
-        pace=pace,
-        special_notes=special_notes,
-    )
+    ), empty_token_usage()
 
 
 def get_destination_guide_context(

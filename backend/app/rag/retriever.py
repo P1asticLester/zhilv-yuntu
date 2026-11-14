@@ -5,6 +5,10 @@ import re
 
 import httpx
 
+from app.agents.llm_client import empty_token_usage
+from app.config import EXTERNAL_API_TIMEOUT_SECONDS
+from app.constants import NOISE_CHUNK_TITLE, NOISE_CHUNK_TITLES
+from app.text_utils import split_query_keywords
 from app.config import (
     CHROMA_COLLECTION_NAME,
     EMBEDDING_MODEL,
@@ -69,10 +73,6 @@ def _build_rag_cache_key(query: str, top_k: int, destination: str | None) -> str
     )
 
 
-def _extract_query_keywords(query: str) -> list[str]:
-    """从 query 中切出用于轻量重排序的关键词。"""
-    raw_parts = re.split(r"[\s,，。；;、]+", query)
-    return [part.strip() for part in raw_parts if part.strip()]
 
 
 def _contains_any(text: str, keywords: list[str]) -> bool:
@@ -92,7 +92,7 @@ def _score_chunk_for_rerank(
     reasons: list[str] = []
 
     score = 0
-    for keyword in _extract_query_keywords(query):
+    for keyword in split_query_keywords(query):
         if keyword in title:
             score += 3
             reasons.append(f"title+3:{keyword}")
@@ -101,7 +101,7 @@ def _score_chunk_for_rerank(
             reasons.append(f"text+1:{keyword}")
 
     # 文档开头通常是低信息量噪声片段。
-    if title == "文档开头":
+    if title == NOISE_CHUNK_TITLE:
         score -= 8
         reasons.append("noise-8:文档开头")
 
@@ -144,7 +144,6 @@ def _score_chunk_for_rerank(
     return score
 
 
-_NOISE_TITLES = {"文档开头"}
 
 
 def _extract_rerank_token_usage(response_data: dict) -> tuple[dict[str, int], bool]:
@@ -185,7 +184,7 @@ def _rerank_with_dashscope(
     top_k: int,
 ) -> tuple[list[tuple[float, int]] | None, dict[str, int]]:
     """调用 DashScope qwen3-rerank 模型做语义重排序。返回 (scored, token_usage)。"""
-    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
+    empty_usage = empty_token_usage()
     if not LLM_API_KEY or not chunks:
         print("[rerank] skip qwen3-rerank: missing LLM_API_KEY or empty chunks")
         return None, empty_usage
@@ -193,7 +192,7 @@ def _rerank_with_dashscope(
     # 过滤已知噪声片段，避免浪费 rerank 名额
     filtered = [
         (i, chunk) for i, chunk in enumerate(chunks)
-        if chunk.get("title", "") not in _NOISE_TITLES
+        if chunk.get("title", "") not in NOISE_CHUNK_TITLES
     ]
     if not filtered:
         print("[rerank] skip qwen3-rerank: all chunks are noise")
@@ -225,7 +224,7 @@ def _rerank_with_dashscope(
             f"[rerank] calling qwen3-rerank: query={query}, "
             f"candidate_count={len(clean_chunks)}, top_k={top_k}"
         )
-        with httpx.Client(timeout=30) as client:
+        with httpx.Client(timeout=EXTERNAL_API_TIMEOUT_SECONDS) as client:
             response = client.post(
                 DASHSCOPE_RERANK_URL,
                 json=payload,
@@ -325,7 +324,7 @@ def rerank_guide_chunks(
     destination: str | None = None,
 ) -> tuple[list[dict[str, str]], dict[str, int]]:
     """对召回候选做重排序，优先 Cross-encoder，fallback 规则级。返回 (chunks, rerank_token_usage)。"""
-    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
+    empty_usage = empty_token_usage()
 
     # 尝试从缓存读取 rerank 结果
     cache_key = _build_rerank_cache_key(query, matched_chunks)
@@ -396,7 +395,7 @@ def retrieve_travel_guide(
     query: str, top_k: int = 3, destination: str | None = None
 ) -> tuple[list[str], dict[str, int], dict[str, int]]:
     """返回最相关的攻略片段。返回 (texts, rerank_usage, embedding_usage)。"""
-    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
+    empty_usage = empty_token_usage()
     cache_key = _build_rag_cache_key(query, top_k, destination)
     cached_value = get_cached_json(cache_key)
     if cached_value is not None:

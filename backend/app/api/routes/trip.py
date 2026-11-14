@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
+from app.constants import TRIP_NOT_FOUND_DETAIL
 from app.models.schemas import (
     Itinerary,
     TokenStatsResponse,
@@ -187,7 +188,7 @@ def get_trip_detail(trip_id: str) -> TripDetailResponse:
     """根据 trip_id 查询已保存 itinerary。"""
     trip_detail = get_itinerary_by_trip_id(trip_id)
     if trip_detail is None:
-        raise HTTPException(status_code=404, detail="Trip not found.")
+        raise HTTPException(status_code=404, detail=TRIP_NOT_FOUND_DETAIL)
     return trip_detail
 
 
@@ -196,7 +197,7 @@ def delete_trip(trip_id: str) -> dict[str, str]:
     """根据 trip_id 删除已保存 itinerary。"""
     deleted = delete_itinerary_by_trip_id(trip_id)
     if not deleted:
-        raise HTTPException(status_code=404, detail="Trip not found.")
+        raise HTTPException(status_code=404, detail=TRIP_NOT_FOUND_DETAIL)
     return {
         "message": "Trip itinerary deleted successfully.",
         "trip_id": trip_id,

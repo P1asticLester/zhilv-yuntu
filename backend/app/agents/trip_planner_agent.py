@@ -5,6 +5,8 @@ import re
 
 from pydantic import BaseModel, Field
 
+from app.agents.llm_client import build_chat_llm, empty_token_usage, extract_token_usage
+from app.constants import DEFAULT_HOTEL_LEVEL, DEFAULT_PACE, DEFAULT_PREFERENCE_TEXT
 from app.agents.tools.rag_tool import get_destination_guide_context
 from app.config import (
     LLM_API_KEY,
@@ -155,38 +157,16 @@ def collect_trip_context(
 
 
 def _build_chat_llm():
-    """创建通用 ChatOpenAI 实例。"""
-    if not LLM_API_KEY:
-        return None
-
-    try:
-        from langchain_openai import ChatOpenAI
-    except ImportError:
-        return None
-
-    # qwen3.7-plus 等混合思考模型默认开启 thinking，会先生成大量 reasoning tokens。
-    # 本项目只需要结构化 JSON，值由 LLM_ENABLE_THINKING 固定（默认 False），
-    # 避免上游默认行为变更导致延迟与成本失控；改 true 可做单变量 A/B 对照。
-    return ChatOpenAI(
+    """Planner 的 LLM 构造入口；细节统一在 llm_client。"""
+    return build_chat_llm(
         model=LLM_MODEL,
         temperature=0.3,
         api_key=LLM_API_KEY,
-        base_url=LLM_BASE_URL or None,
+        base_url=LLM_BASE_URL,
         timeout=LLM_TIMEOUT_SECONDS,
         max_retries=LLM_MAX_RETRIES,
-        model_kwargs={"extra_body": {"enable_thinking": LLM_ENABLE_THINKING}},
+        enable_thinking=LLM_ENABLE_THINKING,
     )
-
-
-def _extract_token_usage(response) -> dict[str, int]:
-    """从 LangChain AIMessage 中提取 token 使用量。"""
-    usage = {"prompt_tokens": 0, "completion_tokens": 0}
-    metadata = getattr(response, "response_metadata", None) or {}
-    token_usage = metadata.get("token_usage", {})
-    if token_usage:
-        usage["prompt_tokens"] = token_usage.get("prompt_tokens", 0)
-        usage["completion_tokens"] = token_usage.get("completion_tokens", 0)
-    return usage
 
 
 def generate_planner_draft(
@@ -200,7 +180,7 @@ def generate_planner_draft(
     如果当前环境还没有准备好模型调用条件，就返回 None，
     这样 service 层还能回退到规则版实现。
     """
-    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
+    empty_usage = empty_token_usage()
     llm = _build_chat_llm()
     if llm is None:
         return None, empty_usage
@@ -231,10 +211,10 @@ def generate_planner_draft(
 天数：{day_count}
 人数：{request.travelers}
 预算：{request.budget}
-偏好：{'、'.join(request.preferences) if request.preferences else '无特别偏好'}
-节奏：{request.pace or '适中'}
+偏好：{'、'.join(request.preferences) if request.preferences else DEFAULT_PREFERENCE_TEXT}
+节奏：{request.pace or DEFAULT_PACE}
 饮食偏好：{'、'.join(request.dietary_preferences) if request.dietary_preferences else '无'}
-酒店档次：{request.hotel_level or '舒适型'}
+酒店档次：{request.hotel_level or DEFAULT_HOTEL_LEVEL}
 额外备注：{request.special_notes or '无'}
 
 本地攻略上下文：
@@ -294,7 +274,7 @@ JSON 结构示例：
         print(f"[trip_planner_agent] 大模型调用失败: {type(exc).__name__}: {exc}")
         return None, empty_usage
 
-    token_usage = _extract_token_usage(response)
+    token_usage = extract_token_usage(response)
     print(f"[trip_planner_agent] 大模型调用完成。token: prompt={token_usage['prompt_tokens']}, completion={token_usage['completion_tokens']}")
 
     raw_text = getattr(response, "content", "")
@@ -347,7 +327,7 @@ def generate_dynamic_planner_draft(
     day_count: int,
 ) -> tuple[DynamicPlannerDraft | None, dict[str, int]]:
     """让模型只能通过 POI ID 从动态候选池中选择行程实体。"""
-    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
+    empty_usage = empty_token_usage()
     llm = _build_chat_llm()
     if llm is None:
         return None, empty_usage
@@ -371,10 +351,10 @@ def generate_dynamic_planner_draft(
 天数：{day_count}
 人数：{request.travelers}
 预算：{request.budget}
-偏好：{'、'.join(request.preferences) if request.preferences else '常规旅行体验'}
-节奏：{request.pace or '适中'}
+偏好：{'、'.join(request.preferences) if request.preferences else DEFAULT_PREFERENCE_TEXT}
+节奏：{request.pace or DEFAULT_PACE}
 饮食偏好：{'、'.join(request.dietary_preferences) if request.dietary_preferences else '无'}
-酒店档次：{request.hotel_level or '舒适型'}
+酒店档次：{request.hotel_level or DEFAULT_HOTEL_LEVEL}
 额外要求：{request.special_notes or '无'}
 
 候选池：
@@ -421,7 +401,7 @@ def generate_dynamic_planner_draft(
         )
         return None, empty_usage
 
-    token_usage = _extract_token_usage(response)
+    token_usage = extract_token_usage(response)
     raw_text = getattr(response, "content", "")
     if isinstance(raw_text, list):
         raw_text = "".join(
@@ -465,7 +445,7 @@ def generate_day_edit_draft(
     这个函数只负责产出目标那一天的编辑结果，
     最终如何合并回完整 itinerary 由 service 层处理。
     """
-    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
+    empty_usage = empty_token_usage()
     llm = _build_chat_llm()
     if llm is None:
         return None, empty_usage
@@ -532,7 +512,7 @@ JSON 结构示例：
         print(f"[trip_planner_agent] 单日编辑调用失败: {type(exc).__name__}: {exc}")
         return None, empty_usage
 
-    token_usage = _extract_token_usage(response)
+    token_usage = extract_token_usage(response)
     print(f"[trip_planner_agent] 单日编辑调用完成。token: prompt={token_usage['prompt_tokens']}, completion={token_usage['completion_tokens']}")
 
     raw_text = getattr(response, "content", "")

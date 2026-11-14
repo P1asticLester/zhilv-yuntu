@@ -4,21 +4,8 @@ from io import BytesIO
 from urllib.request import Request, urlopen
 from xml.sax.saxutils import escape
 
+from app.constants import TECHNICAL_TIP_KEYWORDS
 from app.models.schemas import Itinerary, TripDetailResponse
-
-
-TECHNICAL_EXPORT_KEYWORDS = (
-    "LLM",
-    "RAG",
-    "LangChain",
-    "Chroma",
-    "演示",
-    "测试",
-    "规则",
-    "模型",
-    "源码",
-    "trip_service",
-)
 
 
 def _safe_text(value: object) -> str:
@@ -33,7 +20,7 @@ def _clean_export_tips(tips: list[str]) -> list[str]:
         normalized_tip = tip.strip()
         if not normalized_tip:
             continue
-        if any(keyword in normalized_tip for keyword in TECHNICAL_EXPORT_KEYWORDS):
+        if any(keyword in normalized_tip for keyword in TECHNICAL_TIP_KEYWORDS):
             continue
         if normalized_tip not in cleaned_tips:
             cleaned_tips.append(normalized_tip)
@@ -47,7 +34,7 @@ def _public_source_notes(source_notes: list[str]) -> list[str]:
         normalized_note = note.strip()
         if not normalized_note:
             continue
-        if any(keyword in normalized_note for keyword in TECHNICAL_EXPORT_KEYWORDS):
+        if any(keyword in normalized_note for keyword in TECHNICAL_TIP_KEYWORDS):
             continue
         if normalized_note.startswith("[来源:"):
             public_notes.append(normalized_note)

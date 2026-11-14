@@ -2,17 +2,13 @@ from __future__ import annotations
 
 import re
 
+from app.text_utils import append_unique
+
 
 _RAG_CONTEXT_TITLE_PATTERN = re.compile(r"^\[来源:\s*.+?\s*\|\s*标题:\s*(?P<title>.+?)\]$")
 _MARKDOWN_HEADING_NUMBER_PATTERN = re.compile(r"^\d+(?:\.\d+)*\s+")
 _MEAL_NAME_PATTERN = re.compile(r"【(?P<name>[^】]+)】招牌菜")
 _HOTEL_NAME_PATTERN = re.compile(r"【(?P<name>[^】]+)】[^\n]*酒店预算")
-
-
-def _append_unique(candidates: list[str], value: str | None) -> None:
-    normalized = (value or "").strip()
-    if normalized and normalized not in candidates:
-        candidates.append(normalized)
 
 
 def _extract_spot_names(rag_contexts: list[str]) -> list[str]:
@@ -25,7 +21,7 @@ def _extract_spot_names(rag_contexts: list[str]) -> list[str]:
         match = _RAG_CONTEXT_TITLE_PATTERN.match(header.strip())
         if match is None:
             continue
-        _append_unique(
+        append_unique(
             candidates,
             _MARKDOWN_HEADING_NUMBER_PATTERN.sub("", match.group("title")).strip(),
         )
@@ -36,7 +32,7 @@ def _extract_entity_names(rag_contexts: list[str], pattern: re.Pattern[str]) -> 
     candidates: list[str] = []
     for context in rag_contexts:
         for match in pattern.finditer(context):
-            _append_unique(candidates, match.group("name"))
+            append_unique(candidates, match.group("name"))
     return candidates
 
 

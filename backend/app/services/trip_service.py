@@ -2,6 +2,15 @@ from __future__ import annotations
 
 from datetime import date as DateType, timedelta
 
+from app.agents.llm_client import empty_token_usage
+from app.constants import (
+    DEFAULT_MEAL_TYPE,
+    DEFAULT_SPOT_END_TIME,
+    DEFAULT_SPOT_START_TIME,
+    DEFAULT_TRANSPORT_DURATION,
+    TECHNICAL_TIP_KEYWORDS,
+)
+from app.text_utils import format_minutes
 from app.agents.trip_planner_agent import (
     DynamicPlannerDayDraft,
     DynamicPlannerDraft,
@@ -32,18 +41,9 @@ from app.services.place_candidate_service import (
 )
 
 
-TECHNICAL_TIP_KEYWORDS = (
-    "LLM",
-    "RAG",
-    "LangChain",
-    "Chroma",
-    "演示",
-    "测试",
-    "规则",
-    "模型",
-    "源码",
-    "trip_service",
-)
+def _build_trip_id(request: TripRequest) -> str:
+    """动态行程与 RAG 行程共用同一个 trip_id 生成规则。"""
+    return f"trip_{request.destination}_{request.start_date.isoformat()}"
 
 
 def _clean_user_tips(tips: list[str], destination: str | None = None) -> list[str]:
@@ -165,7 +165,7 @@ def _apply_route_based_transport_costs(itinerary: Itinerary) -> None:
     for day in itinerary.days:
         for transport in day.transport:
             if transport.estimated_minutes is not None:
-                transport.duration = f"{transport.estimated_minutes} 分钟"
+                transport.duration = format_minutes(transport.estimated_minutes)
 
             if transport.distance_km is None:
                 continue
@@ -402,12 +402,12 @@ def generate_dynamic_trip_itinerary(
                         start_time=(
                             planner_day.spot_start_time
                             if planner_day is not None
-                            else "10:00"
+                            else DEFAULT_SPOT_START_TIME
                         ),
                         end_time=(
                             planner_day.spot_end_time
                             if planner_day is not None
-                            else "12:00"
+                            else DEFAULT_SPOT_END_TIME
                         ),
                         description=spot_reason,
                         estimated_cost=ticket_costs[index],
@@ -422,7 +422,7 @@ def generate_dynamic_trip_itinerary(
                 meals=[
                     MealItem(
                         name=meal.name,
-                        meal_type="午餐",
+                        meal_type=DEFAULT_MEAL_TYPE,
                         estimated_cost=daily_meal_costs[index],
                         notes=meal_notes,
                         address=meal.address,
@@ -484,7 +484,7 @@ def generate_dynamic_trip_itinerary(
         source_notes.append("动态 Planner 当前不可用，已使用真实 POI 候选生成规则方案。")
 
     itinerary = Itinerary(
-        trip_id=f"trip_{request.destination}_{request.start_date.isoformat()}",
+        trip_id=_build_trip_id(request),
         destination=request.destination,
         summary=summary,
         days=days,
@@ -671,8 +671,8 @@ def generate_trip_itinerary(request: TripRequest) -> Itinerary:
                 [
                     SpotItem(
                         name=str(spot_name),
-                        start_time="10:00",
-                        end_time="12:00",
+                        start_time=DEFAULT_SPOT_START_TIME,
+                        end_time=DEFAULT_SPOT_END_TIME,
                         description=str(raw_day["spot_description"]),
                         estimated_cost=float(raw_day["ticket_cost"]),
                         location=request.destination,
@@ -685,7 +685,7 @@ def generate_trip_itinerary(request: TripRequest) -> Itinerary:
                 [
                     MealItem(
                         name=str(meal_name),
-                        meal_type="午餐",
+                        meal_type=DEFAULT_MEAL_TYPE,
                         estimated_cost=daily_meal_costs[index],
                         notes=str(raw_day["meal_note"]),
                     )
@@ -710,7 +710,7 @@ def generate_trip_itinerary(request: TripRequest) -> Itinerary:
                         from_place=f"{request.destination} 出发点",
                         to_place=str(spot_name),
                         estimated_cost=daily_transport_costs[index],
-                        duration="30 分钟",
+                        duration=DEFAULT_TRANSPORT_DURATION,
                     )
                 ]
                 if spot_name
@@ -748,7 +748,7 @@ def generate_trip_itinerary(request: TripRequest) -> Itinerary:
     )
 
     itinerary = Itinerary(
-        trip_id=f"trip_{request.destination}_{request.start_date.isoformat()}",
+        trip_id=_build_trip_id(request),
         destination=request.destination,
         summary=summary,
         days=days,
@@ -783,7 +783,7 @@ def edit_trip_itinerary(request: TripEditRequest) -> Itinerary:
             pass
 
     llm_edit_applied = False
-    edit_token_usage = {"prompt_tokens": 0, "completion_tokens": 0}
+    edit_token_usage = empty_token_usage()
     if target_day is not None:
         day_uses_candidate_pool = bool(
             target_day.hotel is not None

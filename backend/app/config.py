@@ -47,6 +47,8 @@ LLM_MAX_RETRIES = int(os.getenv("LLM_MAX_RETRIES", "1"))
 # 混合思考模型（如 qwen3.7-plus）默认开启 thinking，会额外产生大量 reasoning tokens。
 # 本项目只需要结构化 JSON，默认显式关闭；设为 true 可做单变量 A/B 对照实验。
 LLM_ENABLE_THINKING = os.getenv("LLM_ENABLE_THINKING", "false").lower() == "true"
+# DashScope rerank / embeddings 这类独立 HTTP 调用的统一超时（秒）。
+EXTERNAL_API_TIMEOUT_SECONDS = int(os.getenv("EXTERNAL_API_TIMEOUT_SECONDS", "30"))
 
 
 # RAG / 向量库配置

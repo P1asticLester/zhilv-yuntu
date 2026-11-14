@@ -11,7 +11,7 @@ import type {
   WeatherForecastResponse,
 } from "../types";
 
-export const API_BASE_URL =
+const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 const api = axios.create({
@@ -73,5 +73,3 @@ export function getMarkdownExportUrl(tripId: string): string {
 export function getPdfExportUrl(tripId: string): string {
   return `${API_BASE_URL}/export/${encodeURIComponent(tripId)}/pdf`;
 }
-
-export default api;

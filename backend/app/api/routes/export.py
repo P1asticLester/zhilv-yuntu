@@ -3,6 +3,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import PlainTextResponse, Response
 
+from app.constants import TRIP_NOT_FOUND_DETAIL
 from app.services.export_service import itinerary_to_markdown, itinerary_to_pdf_bytes
 from app.services.storage_service import get_itinerary_by_trip_id
 
@@ -22,7 +23,7 @@ def export_trip_markdown(trip_id: str) -> PlainTextResponse:
     """把已保存 itinerary 导出为 Markdown 文本。"""
     trip_detail = get_itinerary_by_trip_id(trip_id)
     if trip_detail is None:
-        raise HTTPException(status_code=404, detail="Trip not found.")
+        raise HTTPException(status_code=404, detail=TRIP_NOT_FOUND_DETAIL)
 
     markdown = itinerary_to_markdown(trip_detail)
     return PlainTextResponse(
@@ -37,7 +38,7 @@ def export_trip_pdf(trip_id: str) -> Response:
     """把已保存 itinerary 导出为 PDF。"""
     trip_detail = get_itinerary_by_trip_id(trip_id)
     if trip_detail is None:
-        raise HTTPException(status_code=404, detail="Trip not found.")
+        raise HTTPException(status_code=404, detail=TRIP_NOT_FOUND_DETAIL)
 
     try:
         pdf_bytes = itinerary_to_pdf_bytes(trip_detail)

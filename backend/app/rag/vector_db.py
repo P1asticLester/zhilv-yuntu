@@ -5,6 +5,10 @@ from hashlib import md5
 
 import httpx
 
+from app.agents.llm_client import empty_token_usage
+from app.config import EXTERNAL_API_TIMEOUT_SECONDS
+from app.constants import NOISE_CHUNK_TITLE
+from app.text_utils import split_query_keywords
 from app.config import (
     BACKEND_DIR,
     CHROMA_COLLECTION_NAME,
@@ -23,7 +27,7 @@ DATA_DIR = BACKEND_DIR / "data"
 def _split_markdown_into_chunks(markdown_text: str, source_name: str) -> list[dict[str, str]]:
     """按二级、三级标题切分 Markdown，返回可检索片段。"""
     chunks: list[dict[str, str]] = []
-    current_title = "文档开头"
+    current_title = NOISE_CHUNK_TITLE
     current_lines: list[str] = []
 
     for line in markdown_text.splitlines():
@@ -90,15 +94,11 @@ def load_guide_chunks() -> list[dict[str, str]]:
     return chunks
 
 
-def _extract_keywords(query: str) -> list[str]:
-    """把查询语句切成简单关键词，用于回退匹配。"""
-    raw_keywords = re.split(r"[\s,，。；;、]+", query)
-    return [keyword.strip() for keyword in raw_keywords if keyword.strip()]
 
 
 def _score_chunk(query: str, chunk_text: str) -> int:
     """按关键词出现次数给片段打分。"""
-    keywords = _extract_keywords(query)
+    keywords = split_query_keywords(query)
     return sum(1 for keyword in keywords if keyword in chunk_text)
 
 
@@ -165,7 +165,7 @@ def _extract_embedding_token_usage(response_data: dict) -> dict[str, int]:
 
 def _embed_query_with_usage(query: str) -> tuple[list[float] | None, dict[str, int]]:
     """在线 query embedding：优先直接调接口拿官方 usage，失败时回退 LangChain 但 usage 为 0。"""
-    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
+    empty_usage = empty_token_usage()
     if not LLM_API_KEY:
         return None, empty_usage
 
@@ -181,7 +181,7 @@ def _embed_query_with_usage(query: str) -> tuple[list[float] | None, dict[str, i
     }
 
     try:
-        with httpx.Client(timeout=30) as client:
+        with httpx.Client(timeout=EXTERNAL_API_TIMEOUT_SECONDS) as client:
             response = client.post(endpoint, json=payload, headers=headers)
         if response.status_code == 200:
             data = response.json()
@@ -269,7 +269,7 @@ def _search_guide_chunks_by_chroma(
 ) -> tuple[list[dict[str, str]], dict[str, int]]:
     """优先使用 Chroma 做向量检索，并返回在线 query embedding token。"""
     collection = _get_chroma_collection()
-    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
+    empty_usage = empty_token_usage()
 
     if collection is None:
         return [], empty_usage
@@ -317,7 +317,7 @@ def search_guide_chunks_with_usage(
 
     优先走 Chroma 向量检索；如果当前环境还没准备好，再回退到关键词检索。
     """
-    empty_usage = {"prompt_tokens": 0, "completion_tokens": 0}
+    empty_usage = empty_token_usage()
     chroma_results, embedding_usage = _search_guide_chunks_by_chroma(
         query=query, top_k=top_k, destination=destination
     )
@@ -326,13 +326,3 @@ def search_guide_chunks_with_usage(
     return _search_guide_chunks_by_keywords(
         query=query, top_k=top_k, destination=destination
     ), empty_usage
-
-
-def search_guide_chunks(
-    query: str, top_k: int = 3, destination: str | None = None
-) -> list[dict[str, str]]:
-    """兼容旧调用：只返回检索片段，不返回 token usage。"""
-    chunks, _ = search_guide_chunks_with_usage(
-        query=query, top_k=top_k, destination=destination
-    )
-    return chunks
