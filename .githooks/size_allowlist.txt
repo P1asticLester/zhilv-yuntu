@@ -1,0 +1,9 @@
+# 存量超标文件豁免清单（2026-11-14 装钩子时登记）
+# 这些文件在装钩子之前就已超过 20 KB，本次不拆；新增/修改其它文件时仍会照常拦截。
+# 不要再往本清单加新条目。超标就按功能拆文件。
+README.md
+CHANGELOG.md
+backend/app/services/trip_service.py
+backend/app/agents/trip_planner_agent.py
+backend/scripts/evaluate_generation_quality.py
+frontend/src/views/Result.vue

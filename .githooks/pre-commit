@@ -1,0 +1,42 @@
+#!/bin/sh
+# 提交前检查：暂存的新增/修改文件超过 20 KB（约 5,000 token）就拒绝提交。
+# 装钩子前就超标的存量文件见 .githooks/size_allowlist.txt，已豁免；不要再往里加新条目。
+# 启用（本机配置，不随仓库走）：git config core.hooksPath .githooks
+
+MAX_BYTES=20000
+ROOT=$(git rev-parse --show-toplevel)
+ALLOWLIST="$ROOT/.githooks/size_allowlist.txt"
+
+violations=$(
+    git diff --cached --name-only --diff-filter=ACM | while IFS= read -r file; do
+        # lockfile、依赖、构建产物、二进制资源：agent 不会去读，跳过不查。
+        case "$file" in
+            *package-lock.json|*yarn.lock|*pnpm-lock.yaml|*.lock|*/node_modules/*|*/dist/*|*/build/*|*.pyc|*.map|*.min.js|*.min.css|*.png|*.jpg|*.jpeg|*.gif|*.webp|*.svg|*.pdf|*.bin|*.db)
+                continue
+                ;;
+        esac
+        if grep -Fxq "$file" "$ALLOWLIST" 2>/dev/null; then
+            continue
+        fi
+        [ -f "$file" ] || continue
+        size=$(wc -c < "$file" | tr -d '[:space:]')
+        if [ "$size" -gt "$MAX_BYTES" ]; then
+            printf '%s %s\n' "$size" "$file"
+        fi
+    done
+)
+
+if [ -n "$violations" ]; then
+    echo "" >&2
+    echo "[pre-commit] 以下暂存文件超过 20 KB（约 5,000 token），拒绝提交：" >&2
+    printf '%s\n' "$violations" | while read -r size file; do
+        echo "  - ${file}：${size} 字节（约 $((size / 1024)) KB）" >&2
+    done
+    echo "" >&2
+    echo "请按功能拆成几个文件后再提交；不要调大阈值，也不要把文件加进豁免清单。" >&2
+    echo "装钩子前就超标的存量文件：.githooks/size_allowlist.txt" >&2
+    echo "" >&2
+    exit 1
+fi
+
+exit 0
