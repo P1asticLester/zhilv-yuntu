@@ -81,7 +81,7 @@
 - GitHub Actions：push `main` / PR 触发，Python 3.13 + `pytest-cov`（CI 单独安装，不改 `requirements.txt`），`--cov-fail-under=65`。
 - 4b 补 7 条端点契约测试，覆盖 health / root / stats / delete 成功与失败分支 / weather 降级分支；每个测试自己造数据，不依赖共享 `app.db` 与执行顺序。
 
-当前：**131 passed / 2 deselected / 73.54%**（2434 stmts / 644 miss），门禁 65 余量 8.54pp；`.env` 改名 + 封 `socket.create_connection` 下仍 131 passed、外部 TCP 连接尝试 0 次。
+当前：**131 passed / 2 deselected / 73.80%**（2553 stmts / 669 miss），门禁 65 余量 8.80pp；`.env` 改名 + 封 `socket.create_connection` 下仍 131 passed、外部 TCP 连接尝试 0 次。
 
 **口径**：CI 绿勾证明的是「断网、无密钥、全新依赖下测试集可重复跑完」，不等于真密钥联网时的端到端可用。
 
@@ -120,7 +120,7 @@
 文档可信度（`6af5853` / `57a50ca`）：
 
 - README 4 处与实现不符的修正：攻略切片 49 → 79 chunk；天气从主链路移除（独立 `GET /weather/forecast`，雨天提示由前端动态增删）；Markdown 导出是 f-string 拼接而非 Jinja2；CHANGELOG 历史指标标注「15 条样例时期，当前 18 条」。
-- CI 注释中的测试数 / 覆盖率口径同步到 131 / 73.54%。
+- CI 注释中的测试数 / 覆盖率口径同步到 131 / 73.80%。
 
 ## 四、复现
 
