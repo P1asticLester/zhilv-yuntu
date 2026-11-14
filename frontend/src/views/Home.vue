@@ -57,7 +57,7 @@ const dayCount = computed(() => {
   const start = new Date(formState.startDate);
   const end = new Date(formState.endDate);
   const diff = end.getTime() - start.getTime();
-  return Number.isNaN(diff) ? 0 : Math.max(Math.floor(diff / 86400000) + 1, 0);
+  return Number.isNaN(diff) ? 0 : Math.max(Math.floor(diff / 86400000) + 1, 1);
 });
 
 function togglePreference(list: string[], value: string) {
