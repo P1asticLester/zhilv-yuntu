@@ -268,7 +268,17 @@ def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 # ------------------------------------------------------------------ 输出
-def render_ascii(results: list[dict[str, Any]], summary: dict[str, Any], min_spots: int) -> str:
+def is_handcrafted_default(source: Path) -> bool:
+    """--input 是否指向仓库内那份手工构造的规则基线（不是真实模型输出）。"""
+    try:
+        return source.resolve() == DEFAULT_CASES.resolve()
+    except OSError:
+        return False
+
+
+def render_ascii(
+    results: list[dict[str, Any]], summary: dict[str, Any], min_spots: int, source: Path
+) -> str:
     """stdout 只用 ASCII，避免 PowerShell 5.1 中文管道乱码。"""
     lines: list[str] = []
     lines.append("=== Generation Quality (offline rule-based, NO model call) ===")
@@ -301,7 +311,12 @@ def render_ascii(results: list[dict[str, Any]], summary: dict[str, Any], min_spo
     lines.append(f"full_score_count   {summary['full_score_count']}/{summary['case_count']}")
     lines.append("")
     lines.append("NOTE: scores come from 5 deterministic rules, NOT an LLM judge.")
-    lines.append("NOTE: eval cases are OFFLINE HANDCRAFTED samples, NOT real model output.")
+    if is_handcrafted_default(source):
+        lines.append("NOTE: eval cases are OFFLINE HANDCRAFTED samples, NOT real model output.")
+    else:
+        lines.append("NOTE: eval cases come from --input (real /trip/generate responses).")
+        lines.append("NOTE: still only 5 structural rules; scores do NOT prove overall")
+        lines.append("      generation quality and do NOT replace human review.")
     lines.append("NOTE: metric weather_tip_ok checks that backend tips do NOT hardcode weather")
     lines.append("      (weather is a separate GET /weather/forecast + frontend Result.vue).")
     return "\n".join(lines)
@@ -315,7 +330,11 @@ def render_markdown(
     lines.append("# 生成质量评估（5a · 离线规则打分）")
     lines.append("")
     lines.append(f"> 评估集：`{source.as_posix()}`　样例数：{summary['case_count']}　每天最少景点：{min_spots}")
-    lines.append("> 纯离线规则打分，**不调用任何模型**；评估集是手工构造样例，**不代表真实模型生成质量**。")
+    if is_handcrafted_default(source):
+        lines.append("> 纯离线规则打分，**不调用任何模型**；评估集是手工构造样例，**不代表真实模型生成质量**。")
+    else:
+        lines.append("> 纯离线规则打分，**不调用任何模型**；评估集来自 `--input`（真实 `/trip/generate` 响应），")
+        lines.append("> 但分数只反映 5 条结构约束，**不等于模型生成质量总分**。")
     lines.append("")
     lines.append("## 五个指标")
     lines.append("")
@@ -369,8 +388,13 @@ def render_markdown(
     lines.append("")
     lines.append("## 口径与禁语")
     lines.append("")
-    lines.append("- 这些分数来自**离线规则 + 手工样例**，只能证明「评估器逻辑正确」，不能写成「生成质量 88 分」。")
-    lines.append("- 想得到真实结论，需把 `/trip/generate` 的实际响应按同样结构另存 JSON 再用 `--input` 评估。")
+    if is_handcrafted_default(source):
+        lines.append("- 这些分数来自**离线规则 + 手工样例**，只能证明「评估器逻辑正确」，不能写成「生成质量 88 分」。")
+        lines.append("- 想得到真实结论，需把 `/trip/generate` 的实际响应按同样结构另存 JSON 再用 `--input` 评估。")
+    else:
+        lines.append("- 这些分数来自**离线规则 + 真实 `/trip/generate` 响应**，只测 5 条结构约束；")
+        lines.append("  不能写成「模型生成质量 80 分」，也不能当成 LLM 裁判或人工验收的替代。")
+        lines.append("- 本批次样本数与运行环境见同目录在线评估记录；跨批次（模型账户状态 / 代理 / 版本）数字不可相减。")
     lines.append("- 与检索侧 A/B（18 条 × 3 轮）是两套独立指标，不要混着比，也不要与历史 93.3% 比较。")
     lines.append("- 规则打分是零成本可复现的基线，不替代人工验收或 LLM 裁判。")
     return "\n".join(lines) + "\n"
@@ -520,7 +544,7 @@ def main() -> int:
 
     results = [score_case(c, args.min_spots) for c in cases]
     summary = summarize(results)
-    print(render_ascii(results, summary, args.min_spots))
+    print(render_ascii(results, summary, args.min_spots, args.input))
 
     if args.out is not None:
         args.out.parent.mkdir(parents=True, exist_ok=True)
