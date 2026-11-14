@@ -36,6 +36,9 @@ frontend/node_modules/
 dist/
 frontend/dist/
 
+# Local benchmark outputs (Step 1: measurement scripts moved into backend/scripts/)
+backend/scripts/_local/
+
 # Logs
 *.log
 npm-debug.log*

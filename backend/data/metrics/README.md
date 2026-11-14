@@ -2,14 +2,21 @@
 
 ## 这是什么
 
-`GET /metrics/dashboard` 读的两份 CSV 的**仓库内静态快照**，来源是被 `.gitignore`
-忽略的 `docs/tools/` 下的 A/B 运行产物。因为 `docs/` 不上传 GitHub，干净环境 / CI
-读不到原始文件，所以把结果复制一份进仓库，保证接口在任何环境都有确定数据可读。
+`GET /metrics/dashboard` 读的两份 CSV 的**仓库内静态快照**：它们是 2026-11-08
+那批 A/B / 端到端计时的运行结果，原始产物留在被 `.gitignore` 忽略的
+`docs/tools/`。因为 `docs/` 不上传 GitHub，干净环境 / CI 读不到原始文件，
+所以把结果复制一份进仓库，保证接口在任何环境都有确定数据可读。
+
+**2026-11-14（Step 1）**：产出这些结果的工具脚本已从 `docs/tools/` 迁进
+`backend/scripts/`（`bench_generate.py` / `run_ablation.py` /
+`run_cache_ablation.py` / `analyze_retrieval_redundancy.py`），可当场 `--help` 复现；
+`docs/tools/` 原件与历史日志、汇总 CSV/MD 仍留本机。新脚本默认写
+`backend/scripts/_local/`（被 `.gitignore` 忽略），**不会**覆盖本目录的两份快照。
 
 | 文件 | 源 | 批次 | 来源脚本 |
 |---|---|---|---|
-| `ablation_summary.csv` | `docs/tools/ablation_summary.csv` | 2026-11-08 16:49，18 条样例 × 3 轮中位数，9/9 全绿，`REDIS_ENABLED=false` 冷链路 | `docs/tools/run_ablation.py` |
-| `timing_result.csv` | `docs/tools/timing_result.csv` | 3 次端到端 `/trip/generate` 计时（36.42 / 28.82 / 28.22s） | `docs/tools/bench_generate.py` |
+| `ablation_summary.csv` | `docs/tools/ablation_summary.csv` | 2026-11-08 16:49，18 条样例 × 3 轮中位数，9/9 全绿，`REDIS_ENABLED=false` 冷链路 | `backend/scripts/run_ablation.py`（原 `docs/tools/`） |
+| `timing_result.csv` | `docs/tools/timing_result.csv` | 3 次端到端 `/trip/generate` 计时（36.42 / 28.82 / 28.22s） | `backend/scripts/bench_generate.py`（原 `docs/tools/`） |
 
 两份文件与源文件**逐字节一致**（含 UTF-8 BOM），接口按 `utf-8-sig` 读取。
 
@@ -25,16 +32,31 @@
 
 ## 刷新方式（PowerShell）
 
+**覆盖前先备份**，保持 `utf-8-sig`(BOM) 与逐字节口径，并在 CHANGELOG 标注
+样本数与环境。最稳妥的做法是从已核过的本地汇总复制：
+
 ```powershell
 Copy-Item "D:\zhilv-yuntu\docs\tools\ablation_summary.csv" -Destination "D:\zhilv-yuntu\backend\data\metrics\ablation_summary.csv" -Force
 Copy-Item "D:\zhilv-yuntu\docs\tools\timing_result.csv" -Destination "D:\zhilv-yuntu\backend\data\metrics\timing_result.csv" -Force
 ```
 
-只想临时看本机最新数据、不覆盖快照时，给后端进程设环境变量：
+或用仓库内脚本重新跑出明细后显式指过来（需后端在线 + 真实 API Key，属在线评估范畴）：
+
+```powershell
+& "D:\zhilv-yuntu\backend\.venv\Scripts\python.exe" "D:\zhilv-yuntu\backend\scripts\bench_generate.py" --out "D:\zhilv-yuntu\backend\data\metrics\timing_result.csv"
+```
+
+脚本默认写 `backend/scripts/_local/`，只有显式 `--out` / `--out-dir` 才会落到
+本目录，避免误覆盖证据链。
+
+只想临时看本机最新数据、不覆盖快照时，给**后端进程**设环境变量：
 
 ```powershell
 $env:METRICS_DATA_DIR = "D:\zhilv-yuntu\docs\tools"
 ```
+
+**别混用两个变量**：`METRICS_DATA_DIR` 由 `metrics_service.py` 使用，决定「看板
+读哪个目录」；`BENCH_OUTPUT_DIR` / `BENCH_LOGS_DIR` 只决定「度量脚本把产物写到哪」。
 
 ## 缺失时会怎样
 
