@@ -43,6 +43,11 @@ backend/scripts/_local/
 allure-results/
 allure-report/
 
+# Playwright e2e artifacts (Step 4)
+frontend/test-results/
+frontend/playwright-report/
+trace.zip
+
 # Logs
 *.log
 npm-debug.log*
