@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import nullcontext
 from datetime import date as DateType, timedelta
 
 from app.agents.llm_client import empty_token_usage
@@ -34,6 +35,7 @@ from app.models.schemas import (
 )
 from app.services.map_service import enrich_itinerary_with_map_data
 from app.services.fallback_candidates import extract_fallback_candidates
+from app.services.phase_timing import PhaseTimer
 from app.services.place_candidate_service import (
     CityCandidatePool,
     PlaceCandidate,
@@ -227,15 +229,22 @@ def _maybe_enrich_itinerary_with_map_data(
     itinerary: Itinerary,
     city: str | None = None,
     request_budget: float | None = None,
+    timer: PhaseTimer | None = None,
 ) -> Itinerary:
-    """按开关补充地图信息，并在最后统一刷新预算。"""
-    if ENABLE_AMAP_ENRICHMENT:
-        try:
-            itinerary = enrich_itinerary_with_map_data(itinerary, city=city)
-        except Exception:
-            pass
+    """按开关补充地图信息，并在最后统一刷新预算。
 
-    return _refresh_budget_breakdown(itinerary, request_budget=request_budget)
+    timer 只在两条生成主链路传入，用来把「地图 enrich」与「预算回算」分开计时；
+    /trip/edit 不传，走 nullcontext，行为与改动前完全一致。
+    """
+    with (timer.measure("map_enrich") if timer is not None else nullcontext()):
+        if ENABLE_AMAP_ENRICHMENT:
+            try:
+                itinerary = enrich_itinerary_with_map_data(itinerary, city=city)
+            except Exception:
+                pass
+
+    with (timer.measure("budget") if timer is not None else nullcontext()):
+        return _refresh_budget_breakdown(itinerary, request_budget=request_budget)
 
 
 def _validated_dynamic_draft(
@@ -283,12 +292,14 @@ def generate_dynamic_trip_itinerary(
     candidate_pool: CityCandidatePool,
 ) -> Itinerary:
     """使用地图候选生成动态城市行程，所有展示实体都由 POI ID 回填。"""
+    timer = PhaseTimer("dynamic")
     day_count = max((request.end_date - request.start_date).days + 1, 1)
-    raw_draft, planner_usage = generate_dynamic_planner_draft(
-        request=request,
-        candidate_pool=candidate_pool,
-        day_count=day_count,
-    )
+    with timer.measure("planner"):
+        raw_draft, planner_usage = generate_dynamic_planner_draft(
+            request=request,
+            candidate_pool=candidate_pool,
+            day_count=day_count,
+        )
     draft = _validated_dynamic_draft(raw_draft, candidate_pool, day_count)
 
     spots = candidate_pool.candidates_for(PlaceCandidateCategory.SPOT)
@@ -497,21 +508,27 @@ def generate_dynamic_trip_itinerary(
             planner_completion_tokens=planner_usage.get("completion_tokens", 0),
         ),
     )
-    return _refresh_budget_breakdown(itinerary, request_budget=request.budget)
+    with timer.measure("budget"):
+        result = _refresh_budget_breakdown(itinerary, request_budget=request.budget)
+    timer.finish()
+    return result
 
 
 def generate_trip_itinerary(request: TripRequest) -> Itinerary:
     """生成完整 itinerary，并使用更真实的预算估算方式。"""
+    timer = PhaseTimer("curated")
     day_count = (request.end_date - request.start_date).days + 1
     day_count = max(day_count, 1)
 
-    rag_contexts, rewrite_usage, rerank_usage, embedding_usage = collect_trip_context(
-        destination=request.destination,
-        preferences=request.preferences,
-        pace=request.pace,
-        special_notes=request.special_notes,
-    )
-    llm_draft, planner_usage = generate_planner_draft(request, rag_contexts, day_count)
+    with timer.measure("retrieval"):
+        rag_contexts, rewrite_usage, rerank_usage, embedding_usage = collect_trip_context(
+            destination=request.destination,
+            preferences=request.preferences,
+            pace=request.pace,
+            special_notes=request.special_notes,
+        )
+    with timer.measure("planner"):
+        llm_draft, planner_usage = generate_planner_draft(request, rag_contexts, day_count)
 
     token_usage = TokenUsage(
         rewrite_prompt_tokens=rewrite_usage.get("prompt_tokens", 0),
@@ -758,11 +775,14 @@ def generate_trip_itinerary(request: TripRequest) -> Itinerary:
         source_notes=source_notes,
         token_usage=token_usage,
     )
-    return _maybe_enrich_itinerary_with_map_data(
+    result = _maybe_enrich_itinerary_with_map_data(
         itinerary,
         city=request.destination,
         request_budget=request.budget,
+        timer=timer,
     )
+    timer.finish()
+    return result
 
 
 def edit_trip_itinerary(request: TripEditRequest) -> Itinerary:
