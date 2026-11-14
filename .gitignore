@@ -39,6 +39,10 @@ frontend/dist/
 # Local benchmark outputs (Step 1: measurement scripts moved into backend/scripts/)
 backend/scripts/_local/
 
+# Allure report artifacts (Step 3)
+allure-results/
+allure-report/
+
 # Logs
 *.log
 npm-debug.log*

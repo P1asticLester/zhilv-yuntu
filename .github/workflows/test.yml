@@ -9,8 +9,16 @@
 #
 # 本地复现（PowerShell）：
 #   cd "D:/zhilv-yuntu/backend"
-#   & "./.venv/Scripts/python.exe" -m pip install "pytest-cov>=5,<7"
+#   & "./.venv/Scripts/python.exe" -m pip install "pytest-cov>=5,<7" "allure-pytest>=2.13,<3"
 #   & "./.venv/Scripts/python.exe" -m pytest -q --cov=app --cov-report=term-missing --cov-fail-under=65
+#
+# Allure（Step 3）：与 pytest-cov 一样由 CI 单独安装，不改 requirements.txt。
+# 跑测试时写 allure-results/ 并上传为 artifact；--cov-fail-under=65 与 pytest
+# 的 exit code 仍是唯一的失败判定，上传步骤不改变绿勾/红叉。
+# 本地复现报告产物：
+#   & "./.venv/Scripts/python.exe" -m pytest --alluredir=allure-results
+#   allure generate allure-results -o allure-report --clean
+# 本机若没装 Allure CLI，allure-results/ 产物 + 上面这条命令就是最低交付。
 #
 # 注意：只有 push 到 GitHub 之后才会真正出现绿勾；本地跑不算 CI 通过。
 
@@ -42,6 +50,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
           python -m pip install "pytest-cov>=5,<7"
+          python -m pip install "allure-pytest>=2.13,<3"
 
       - name: Run pytest with coverage gate
         # term-missing 会把「哪些行没被覆盖」直接打在 CI 日志里。
@@ -50,3 +59,13 @@ jobs:
           --cov=app
           --cov-report=term-missing
           --cov-fail-under=65
+          --alluredir=allure-results
+
+      - name: Upload Allure results
+        # always() 只为失败时也能拿到结果排查；不改变本 job 的成功/失败判定。
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: backend/allure-results
+          if-no-files-found: ignore
