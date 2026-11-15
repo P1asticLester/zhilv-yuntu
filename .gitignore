@@ -42,6 +42,8 @@ backend/scripts/_local/
 # Allure report artifacts (Step 3)
 allure-results/
 allure-report/
+# pytest-html self-contained report (11-15)
+backend/report.html
 
 # Playwright e2e artifacts (Step 4)
 frontend/test-results/

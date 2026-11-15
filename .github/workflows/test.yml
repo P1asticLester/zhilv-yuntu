@@ -9,8 +9,9 @@
 #
 # 本地复现（PowerShell）：
 #   cd "D:/zhilv-yuntu/backend"
-#   & "./.venv/Scripts/python.exe" -m pip install "pytest-cov>=5,<7" "allure-pytest>=2.13,<3"
-#   & "./.venv/Scripts/python.exe" -m pytest -q --cov=app --cov-report=term-missing --cov-fail-under=65
+#   & "./.venv/Scripts/python.exe" -m pip install "pytest-cov>=5,<7" "allure-pytest>=2.13,<3" "pytest-html>=4.2,<5"
+#   & "./.venv/Scripts/python.exe" -m pytest -q --cov=app --cov-report=term-missing --cov-fail-under=65 \
+#       --alluredir=allure-results --html=report.html --self-contained-html
 #
 # Allure（Step 3）：与 pytest-cov 一样由 CI 单独安装，不改 requirements.txt。
 # 跑测试时写 allure-results/ 并上传为 artifact；--cov-fail-under=65 与 pytest
@@ -19,6 +20,11 @@
 #   & "./.venv/Scripts/python.exe" -m pytest --alluredir=allure-results
 #   allure generate allure-results -o allure-report --clean
 # 本机若没装 Allure CLI，allure-results/ 产物 + 上面这条命令就是最低交付。
+#
+# pytest-html（11-15 补）：与 Allure **并存**，额外产出自包含单文件 HTML，
+# 不需要 Java / Allure CLI，双击即可查看；CI 上传为独立 artifact。
+# 本地：& "./.venv/Scripts/python.exe" -m pytest --html=report.html --self-contained-html
+# 注意报告里会包含测试捕获的 stdout，别把密钥值打进日志。
 #
 # 注意：只有 push 到 GitHub 之后才会真正出现绿勾；本地跑不算 CI 通过。
 
@@ -51,6 +57,7 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip install "pytest-cov>=5,<7"
           python -m pip install "allure-pytest>=2.13,<3"
+          python -m pip install "pytest-html>=4.2,<5"
 
       - name: Run pytest with coverage gate
         # term-missing 会把「哪些行没被覆盖」直接打在 CI 日志里。
@@ -60,6 +67,8 @@ jobs:
           --cov-report=term-missing
           --cov-fail-under=65
           --alluredir=allure-results
+          --html=report.html
+          --self-contained-html
 
       - name: Upload Allure results
         # always() 只为失败时也能拿到结果排查；不改变本 job 的成功/失败判定。
@@ -68,4 +77,13 @@ jobs:
         with:
           name: allure-results
           path: backend/allure-results
+          if-no-files-found: ignore
+
+      - name: Upload self-contained HTML report
+        # pytest-html 产单文件报告，双击即可查看；同样不改变失败判定。
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-report
+          path: backend/report.html
           if-no-files-found: ignore
