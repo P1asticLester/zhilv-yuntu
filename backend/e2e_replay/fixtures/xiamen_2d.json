@@ -1,0 +1,156 @@
+{
+  "trip_id": "replay_xiamen_2d",
+  "destination": "厦门",
+  "summary": "厦门2日轻松看海美食之旅，聚焦鼓浪屿与环岛路，兼顾经典景点与地道小吃，节奏舒缓，预算充足。",
+  "days": [
+    {
+      "day_index": 1,
+      "date": "2026-11-25",
+      "theme": "鼓浪屿漫步与海景",
+      "spots": [
+        {
+          "name": "鼓浪屿风景名胜区",
+          "start_time": "10:00",
+          "end_time": "12:00",
+          "description": "岛上禁止机动车，适合悠闲漫步，欣赏万国建筑博览，日光岩可俯瞰全岛及海域美景。",
+          "estimated_cost": 59.0,
+          "location": "厦门",
+          "image_url": "http://store.is.autonavi.com/showpic/05b0e6e576cf50058e6e2fad7e7dacdc",
+          "address": "晃岩路35-6号",
+          "latitude": 24.444695,
+          "longitude": 118.06702,
+          "poi_id": "B025003YN2"
+        }
+      ],
+      "meals": [
+        {
+          "name": "醉壹号海鲜大排档·老厦门特色菜(厦门美食地标店)",
+          "meal_type": "午餐",
+          "estimated_cost": 170.89,
+          "notes": "品尝清蒸石斑鱼等地道海鲜，人均约120元，体验老厦门风味。",
+          "address": null,
+          "latitude": null,
+          "longitude": null,
+          "poi_id": null,
+          "image_url": null
+        }
+      ],
+      "hotel": {
+        "name": "天成宾馆(厦门机场五缘湾店)",
+        "level": "经济型",
+        "estimated_cost": 241.5,
+        "location": "厦门",
+        "address": "金山西路46号天成大厦",
+        "latitude": 24.503346,
+        "longitude": 118.151125,
+        "poi_id": "B0250049GD",
+        "image_url": "https://store.is.autonavi.com/showpic/cbbc7a9d4295a6324084285e7b25871c"
+      },
+      "transport": [
+        {
+          "mode": "打车",
+          "from_place": "厦门 出发点",
+          "to_place": "鼓浪屿风景名胜区",
+          "estimated_cost": 21.31,
+          "duration": "26 分钟",
+          "distance_km": 5.14,
+          "estimated_minutes": 26
+        }
+      ],
+      "notes": [
+        "当前旅行节奏：适中",
+        "上午乘船登岛，下午随意闲逛感受异国风情，傍晚在岛上海边或返回市区后享用晚餐，行程宽松不赶路。"
+      ]
+    },
+    {
+      "day_index": 2,
+      "date": "2026-11-26",
+      "theme": "环岛路休闲看海",
+      "spots": [
+        {
+          "name": "环岛路",
+          "start_time": "10:00",
+          "end_time": "12:00",
+          "description": "厦门最美海岸线，适合散步、骑行，近距离接触大海，视野开阔，风景宜人。",
+          "estimated_cost": 59.0,
+          "location": "厦门",
+          "image_url": "https://store.is.autonavi.com/showpic/47f6031325e7e9cc0000003006972422?type=pic",
+          "address": "大学路白城沙滩内(东侧)",
+          "latitude": 24.431895,
+          "longitude": 118.103266,
+          "poi_id": "B0IACMJZ5Y"
+        }
+      ],
+      "meals": [
+        {
+          "name": "局口拌面(中山路店)",
+          "meal_type": "午餐",
+          "estimated_cost": 189.19,
+          "notes": "品尝特色拌面，口感独特，人均约25元，简单美味且位于市中心方便返程。",
+          "address": null,
+          "latitude": null,
+          "longitude": null,
+          "poi_id": null,
+          "image_url": null
+        }
+      ],
+      "hotel": {
+        "name": "天成宾馆(厦门机场五缘湾店)",
+        "level": "经济型",
+        "estimated_cost": 272.9,
+        "location": "厦门",
+        "address": "金山西路46号天成大厦",
+        "latitude": 24.503346,
+        "longitude": 118.151125,
+        "poi_id": "B0250049GD",
+        "image_url": "https://store.is.autonavi.com/showpic/cbbc7a9d4295a6324084285e7b25871c"
+      },
+      "transport": [
+        {
+          "mode": "打车",
+          "from_place": "厦门 出发点",
+          "to_place": "环岛路",
+          "estimated_cost": 27.71,
+          "duration": "15 分钟",
+          "distance_km": 8.05,
+          "estimated_minutes": 15
+        }
+      ],
+      "notes": [
+        "当前旅行节奏：适中",
+        "睡到自然醒，下午前往环岛路散步看海，享受悠闲时光，避免早起，晚上品尝地道小吃后结束旅程。"
+      ]
+    }
+  ],
+  "estimated_budget": 1257.5,
+  "budget_breakdown": {
+    "transport": 49.02,
+    "hotel": 514.4,
+    "meals": 360.08,
+    "tickets": 118.0,
+    "other": 216.0,
+    "total": 1257.5
+  },
+  "tips": [
+    "鼓浪屿船票建议提前在微信小程序'屿见厦门'预订",
+    "11月底厦门气温适宜，建议携带薄外套应对海边晚风",
+    "经济型酒店选择泊捷连锁酒店，交通便利且性价比高",
+    "如计划骑行，请以当地实时路况和可通行区域为准。"
+  ],
+  "source_notes": [
+    "Itinerary is assembled by trip_service.py and can optionally use LangChain structured output.",
+    "[来源: xiamen_guide.md | 标题: 5. 经典三日行程参考]\n* **第一天：探索鼓浪屿**\n* 上午：乘坐渡轮前往【鼓浪屿风景名胜区】游览，参观日光岩等著名景点。\n* 下午：继续在岛上闲逛，感受异国风情建筑的魅力。\n* 晚上：返回市区，在【醉壹号海鲜大排档·老厦门特色菜(厦门美食地标店)】享用晚餐。\n* **第二天：文化之旅**\n* 上午：参观【南普陀寺】，了解佛教文化。\n* 下午：前往【胡里山炮台】，学习历史知识。\n* 晚上：尝试【阿忠食坊大排档·20年老店(万象城店)】的地道美食。\n* **第三天：享受自然风光**\n* 上午：沿着环岛路骑行或散步，欣赏海边美景。\n* 下午：参观【厦门老院子景区】，体验当地民俗风情。\n* 晚上：在【荣誉·海上江南】品尝高端海鲜料理，结束愉快旅程。",
+    "[来源: xiamen_guide.md | 标题: 中档特色（人均 50-150 元）]\n* **【醉壹号海鲜大排档·老厦门特色菜(厦门美食地标店)】招牌菜**：清蒸石斑鱼，肉质细嫩，新鲜美味。人均预算 **120元**。\n* **【阿忠食坊大排档·20年老店(万象城店)】招牌菜**：椒盐虾蛄，外酥里嫩，香辣可口。人均预算 **80元**。",
+    "已补充高德地图地址、坐标或路线估算信息。"
+  ],
+  "token_usage": {
+    "rewrite_prompt_tokens": 116,
+    "rewrite_completion_tokens": 21,
+    "embedding_prompt_tokens": 83,
+    "embedding_completion_tokens": 0,
+    "planner_prompt_tokens": 1578,
+    "planner_completion_tokens": 441,
+    "rerank_prompt_tokens": 3789,
+    "rerank_completion_tokens": 0
+  }
+}

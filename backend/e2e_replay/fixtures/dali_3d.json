@@ -1,0 +1,214 @@
+{
+  "trip_id": "replay_dali_3d",
+  "destination": "大理",
+  "summary": "大理3日轻松摄影之旅，聚焦自然风景与日落美景。行程节奏舒缓，避开早起，重点安排海东镇文笔村欣赏洱海日落，住宿选择舒适型兰林阁酒店，餐饮精选少辣或清淡的云南特色及高端海景餐厅，总预算控制在3200元以内。",
+  "days": [
+    {
+      "day_index": 1,
+      "date": "2026-11-20",
+      "theme": "古城漫步与历史韵味",
+      "spots": [
+        {
+          "name": "大理古城-南门楼",
+          "start_time": "10:00",
+          "end_time": "12:00",
+          "description": "作为古城标志性入口，适合拍摄具有历史感的照片，且免费开放，游览轻松不累。",
+          "estimated_cost": 40.0,
+          "location": "大理",
+          "image_url": "https://store.is.autonavi.com/showpic/6fcf0833917c6ab7ed7fd0b07ccf0f89",
+          "address": "古城区大理古城一塔路42号大理古城内(南侧)",
+          "latitude": 25.687803,
+          "longitude": 100.163916,
+          "poi_id": "B0FFIG7SRR"
+        }
+      ],
+      "meals": [
+        {
+          "name": "金傣苑现炒云南菜·手抓饭(洋人街店)",
+          "meal_type": "午餐",
+          "estimated_cost": 145.82,
+          "notes": "位于洋人街，提供云南特色手抓饭，口味适中，可要求少辣，适合初到大理品尝当地风味。",
+          "address": null,
+          "latitude": null,
+          "longitude": null,
+          "poi_id": null,
+          "image_url": null
+        }
+      ],
+      "hotel": {
+        "name": "兰林阁酒店",
+        "level": "舒适型",
+        "estimated_cost": 358.56,
+        "location": "大理",
+        "address": "玉洱路96号",
+        "latitude": 25.695577,
+        "longitude": 100.161241,
+        "poi_id": "B03680HPM2",
+        "image_url": "http://store.is.autonavi.com/showpic/5936ec8b8cbf8d80cb11c578aab6b2d6"
+      },
+      "transport": [
+        {
+          "mode": "打车",
+          "from_place": "大理 出发点",
+          "to_place": "大理古城-南门楼",
+          "estimated_cost": 48.5,
+          "duration": "29 分钟",
+          "distance_km": 17.5,
+          "estimated_minutes": 29
+        }
+      ],
+      "notes": [
+        "当前旅行节奏：轻松",
+        "下午漫步洋人街后在此用餐，晚上可在红龙井附近散步消食，节奏轻松。"
+      ]
+    },
+    {
+      "day_index": 2,
+      "date": "2026-11-21",
+      "theme": "洱海日落与极致摄影",
+      "spots": [
+        {
+          "name": "大理180度海景网红打卡地",
+          "start_time": "10:00",
+          "end_time": "12:00",
+          "description": "位于海东镇文笔村，是欣赏洱海全景和拍摄日落的绝佳位置，视野开阔，非常出片。",
+          "estimated_cost": 20.0,
+          "location": "大理",
+          "image_url": "https://store.is.autonavi.com/showpic/b6c25625f6394d26f4d2429189a5e7ad",
+          "address": "海东镇文笔村",
+          "latitude": 25.731845,
+          "longitude": 100.232894,
+          "poi_id": "B0JGX52B9M"
+        }
+      ],
+      "meals": [
+        {
+          "name": "花与菌野生菌火锅(大理古城人民路店)",
+          "meal_type": "午餐",
+          "estimated_cost": 163.32,
+          "notes": "野生菌火锅汤底鲜美，非辣口味，符合少辣偏好，营养丰富，适合游玩一天后补充体力。",
+          "address": null,
+          "latitude": null,
+          "longitude": null,
+          "poi_id": null,
+          "image_url": null
+        }
+      ],
+      "hotel": {
+        "name": "兰林阁酒店",
+        "level": "舒适型",
+        "estimated_cost": 373.76,
+        "location": "大理",
+        "address": "玉洱路96号",
+        "latitude": 25.695577,
+        "longitude": 100.161241,
+        "poi_id": "B03680HPM2",
+        "image_url": "http://store.is.autonavi.com/showpic/5936ec8b8cbf8d80cb11c578aab6b2d6"
+      },
+      "transport": [
+        {
+          "mode": "打车",
+          "from_place": "大理 出发点",
+          "to_place": "大理180度海景网红打卡地",
+          "estimated_cost": 64.05,
+          "duration": "33 分钟",
+          "distance_km": 24.57,
+          "estimated_minutes": 33
+        }
+      ],
+      "notes": [
+        "当前旅行节奏：轻松",
+        "建议下午15:00左右抵达海东镇，预留充足时间寻找机位，静候18:30左右的日落美景。"
+      ]
+    },
+    {
+      "day_index": 3,
+      "date": "2026-11-22",
+      "theme": "休闲时光与告别晚宴",
+      "spots": [
+        {
+          "name": "牧云场网红打卡地",
+          "start_time": "10:00",
+          "end_time": "12:00",
+          "description": "拥有开阔的草坪和天空之镜装置，风格清新自然，适合拍摄轻松惬意的人像照片。",
+          "estimated_cost": 59.0,
+          "location": "大理",
+          "image_url": "https://store.is.autonavi.com/showpic/b6c25625f6394d26f4d2429189a5e7ad",
+          "address": "海东镇文笔村",
+          "latitude": 25.731845,
+          "longitude": 100.232894,
+          "poi_id": "B0JGX52B9M"
+        }
+      ],
+      "meals": [
+        {
+          "name": "大理真美洱海悬崖酒店·海景网红餐厅",
+          "meal_type": "午餐",
+          "estimated_cost": 157.48,
+          "notes": "位于洱海边悬崖，环境优雅，提供精致云贵菜，人均稍高但体验极佳，作为旅程的完美收尾。",
+          "address": null,
+          "latitude": null,
+          "longitude": null,
+          "poi_id": null,
+          "image_url": null
+        }
+      ],
+      "hotel": {
+        "name": "兰林阁酒店",
+        "level": "舒适型",
+        "estimated_cost": 328.18,
+        "location": "大理",
+        "address": "玉洱路96号",
+        "latitude": 25.695577,
+        "longitude": 100.161241,
+        "poi_id": "B03680HPM2",
+        "image_url": "http://store.is.autonavi.com/showpic/5936ec8b8cbf8d80cb11c578aab6b2d6"
+      },
+      "transport": [
+        {
+          "mode": "打车",
+          "from_place": "大理 出发点",
+          "to_place": "牧云场网红打卡地",
+          "estimated_cost": 64.05,
+          "duration": "33 分钟",
+          "distance_km": 24.57,
+          "estimated_minutes": 33
+        }
+      ],
+      "notes": [
+        "当前旅行节奏：轻松",
+        "上午睡到自然醒，下午前往牧云场拍照，傍晚在悬崖餐厅享用告别晚餐，欣赏最后的海景。"
+      ]
+    }
+  ],
+  "estimated_budget": 2206.72,
+  "budget_breakdown": {
+    "transport": 176.6,
+    "hotel": 1060.5,
+    "meals": 466.62,
+    "tickets": 119.0,
+    "other": 384.0,
+    "total": 2206.72
+  },
+  "tips": [
+    "11月大理早晚温差大，建议携带保暖外套。",
+    "海东镇地势较高，风大，拍照时注意防风保暖。",
+    "部分网红打卡点可能收取小额清洁费或停车费，请准备零钱。"
+  ],
+  "source_notes": [
+    "Itinerary is assembled by trip_service.py and can optionally use LangChain structured output.",
+    "[来源: dali_guide.md | 标题: 2.5 大理180度海景网红打卡地]\n* **位置**：海东镇文笔村\n* **门票**：部分区域可能需要支付小额费用\n* **游玩时长**：建议停留1-2小时\n* **简介**：这里是欣赏洱海美景的最佳地点之一，尤其适合摄影爱好者前往拍摄日出或日落。",
+    "[来源: dali_guide.md | 标题: 2.1 大理古城-南门楼]\n* **位置**：古城区大理古城一塔路42号大理古城内(南侧)\n* **门票**：免费\n* **游玩时长**：建议游览时间约30分钟\n* **简介**：作为进入大理古城的主要入口之一，南门楼不仅是拍照留念的好地方，也是了解当地历史文化的起点。",
+    "已补充高德地图地址、坐标或路线估算信息。"
+  ],
+  "token_usage": {
+    "rewrite_prompt_tokens": 118,
+    "rewrite_completion_tokens": 10,
+    "embedding_prompt_tokens": 72,
+    "embedding_completion_tokens": 0,
+    "planner_prompt_tokens": 1750,
+    "planner_completion_tokens": 635,
+    "rerank_prompt_tokens": 3875,
+    "rerank_completion_tokens": 0
+  }
+}

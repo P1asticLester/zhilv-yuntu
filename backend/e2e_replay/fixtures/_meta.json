@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "id": "dali_3d",
+      "file": "dali_3d.json",
+      "destination": "大理",
+      "expected_days": 3,
+      "captured_at": "2026-11-14",
+      "source_batch": "Step 5 真模型在线评估（非当前模型行为）"
+    },
+    {
+      "id": "xiamen_2d",
+      "file": "xiamen_2d.json",
+      "destination": "厦门",
+      "expected_days": 2,
+      "captured_at": "2026-11-14",
+      "source_batch": "Step 5 真模型在线评估（非当前模型行为）"
+    },
+    {
+      "id": "chengdu_3d",
+      "file": "chengdu_3d.json",
+      "destination": "成都",
+      "expected_days": 3,
+      "captured_at": "2026-11-14",
+      "source_batch": "Step 5 真模型在线评估（非当前模型行为）"
+    }
+  ]
+}

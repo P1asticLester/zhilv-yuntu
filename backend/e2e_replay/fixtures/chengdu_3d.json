@@ -1,0 +1,214 @@
+{
+  "trip_id": "replay_chengdu_3d",
+  "destination": "成都",
+  "summary": "成都3日紧凑人文美食之旅，兼顾少辣饮食偏好与半天自由活动。行程涵盖宽窄巷子、黄龙溪古镇及金融城地标，住宿选定And民宿(宽窄巷子店)，餐饮精选老成都张妹特色小吃(现代大厦店)以满足少辣需求。",
+  "days": [
+    {
+      "day_index": 1,
+      "date": "2026-12-01",
+      "theme": "老成都历史韵味",
+      "spots": [
+        {
+          "name": "宽窄巷子景区",
+          "start_time": "10:00",
+          "end_time": "12:00",
+          "description": "清代古街道建筑群，融合传统与现代商业，适合漫步感受少城文化。",
+          "estimated_cost": 47.0,
+          "location": "成都",
+          "image_url": "https://store.is.autonavi.com/showpic/9e05bc3a2102b05d0000008537374204?type=pic",
+          "address": "少城街道金河路口宽窄巷子",
+          "latitude": 30.663869,
+          "longitude": 104.053307,
+          "poi_id": "B001C7YCM4"
+        }
+      ],
+      "meals": [
+        {
+          "name": "老成都张妹特色小吃(现代大厦店)",
+          "meal_type": "午餐",
+          "estimated_cost": 322.94,
+          "notes": "提供担担面等非辣或微辣传统小吃，人均低，适合快速补充能量。",
+          "address": null,
+          "latitude": null,
+          "longitude": null,
+          "poi_id": null,
+          "image_url": null
+        }
+      ],
+      "hotel": {
+        "name": "And民宿(宽窄巷子店)",
+        "level": "舒适型",
+        "estimated_cost": 585.62,
+        "location": "成都",
+        "address": "金仙桥路与卧牛巷交叉口东北140米",
+        "latitude": 30.678125,
+        "longitude": 104.053175,
+        "poi_id": "B0MUY5QME3",
+        "image_url": "https://store.is.autonavi.com/showpic/7eac0d9e078ed742871fbb024bbd4485"
+      },
+      "transport": [
+        {
+          "mode": "打车",
+          "from_place": "成都 出发点",
+          "to_place": "宽窄巷子景区",
+          "estimated_cost": 113.51,
+          "duration": "55 分钟",
+          "distance_km": 47.05,
+          "estimated_minutes": 55
+        }
+      ],
+      "notes": [
+        "当前旅行节奏：紧凑",
+        "上午游览宽窄巷子，下午前往文殊院（自由活动时间段），晚上享用清淡川味小吃。"
+      ]
+    },
+    {
+      "day_index": 2,
+      "date": "2026-12-02",
+      "theme": "古镇风情与休闲",
+      "spots": [
+        {
+          "name": "黄龙溪古镇",
+          "start_time": "10:00",
+          "end_time": "12:00",
+          "description": "川西民居建筑群，古街巷适合拍照，体验慢生活节奏。",
+          "estimated_cost": 20.0,
+          "location": "成都",
+          "image_url": "http://store.is.autonavi.com/showpic/c7f52a244944ad3c980d93daf15663de",
+          "address": "黄龙溪镇黄金路70号",
+          "latitude": 30.317805,
+          "longitude": 103.970525,
+          "poi_id": "B001C8MSP5"
+        }
+      ],
+      "meals": [
+        {
+          "name": "老成都张妹特色小吃(现代大厦店)",
+          "meal_type": "午餐",
+          "estimated_cost": 357.54,
+          "notes": "返回市区后用餐，选择酸辣粉（可要求少醋少辣）或担担面，经济实惠。",
+          "address": null,
+          "latitude": null,
+          "longitude": null,
+          "poi_id": null,
+          "image_url": null
+        }
+      ],
+      "hotel": {
+        "name": "And民宿(宽窄巷子店)",
+        "level": "舒适型",
+        "estimated_cost": 614.91,
+        "location": "成都",
+        "address": "金仙桥路与卧牛巷交叉口东北140米",
+        "latitude": 30.678125,
+        "longitude": 104.053175,
+        "poi_id": "B0MUY5QME3",
+        "image_url": "https://store.is.autonavi.com/showpic/7eac0d9e078ed742871fbb024bbd4485"
+      },
+      "transport": [
+        {
+          "mode": "打车",
+          "from_place": "成都 出发点",
+          "to_place": "黄龙溪古镇",
+          "estimated_cost": 246.02,
+          "duration": "30 分钟",
+          "distance_km": null,
+          "estimated_minutes": null
+        }
+      ],
+      "notes": [
+        "当前旅行节奏：紧凑",
+        "全天安排黄龙溪古镇游览，包含往返交通，傍晚返回市区，预留晚上为自由休息时间。"
+      ]
+    },
+    {
+      "day_index": 3,
+      "date": "2026-12-03",
+      "theme": "都市现代风貌",
+      "spots": [
+        {
+          "name": "成都金融城双子塔",
+          "start_time": "10:00",
+          "end_time": "12:00",
+          "description": "现代化地标建筑，夜景璀璨，适合拍摄城市天际线。",
+          "estimated_cost": 47.0,
+          "location": "成都",
+          "image_url": "http://store.is.autonavi.com/showpic/4f01ee19a4ccff59a3b8c30702db3490",
+          "address": "高新区锦晖西一街55号(金融城地铁站出入口旁)",
+          "latitude": 30.582588,
+          "longitude": 104.064759,
+          "poi_id": "B0J6RAP5S2"
+        }
+      ],
+      "meals": [
+        {
+          "name": "老成都张妹特色小吃(现代大厦店)",
+          "meal_type": "午餐",
+          "estimated_cost": 346.0,
+          "notes": "午餐或晚餐选择，尝试不同口味的小吃组合，注意避开重辣菜品。",
+          "address": null,
+          "latitude": null,
+          "longitude": null,
+          "poi_id": null,
+          "image_url": null
+        }
+      ],
+      "hotel": {
+        "name": "And民宿(宽窄巷子店)",
+        "level": "舒适型",
+        "estimated_cost": 632.47,
+        "location": "成都",
+        "address": "金仙桥路与卧牛巷交叉口东北140米",
+        "latitude": 30.678125,
+        "longitude": 104.053175,
+        "poi_id": "B0MUY5QME3",
+        "image_url": "https://store.is.autonavi.com/showpic/7eac0d9e078ed742871fbb024bbd4485"
+      },
+      "transport": [
+        {
+          "mode": "打车",
+          "from_place": "成都 出发点",
+          "to_place": "成都金融城双子塔",
+          "estimated_cost": 118.0,
+          "duration": "46 分钟",
+          "distance_km": 49.09,
+          "estimated_minutes": 46
+        }
+      ],
+      "notes": [
+        "当前旅行节奏：紧凑",
+        "上午参观双子塔周边，下午在交子公园享受半天自由活动，傍晚欣赏双子塔灯光秀后结束行程。"
+      ]
+    }
+  ],
+  "estimated_budget": 3991.01,
+  "budget_breakdown": {
+    "transport": 477.53,
+    "hotel": 1833.0,
+    "meals": 1026.48,
+    "tickets": 114.0,
+    "other": 540.0,
+    "total": 3991.01
+  },
+  "tips": [
+    "12月成都湿冷，建议携带保暖衣物及雨具。",
+    "部分川菜默认含辣，点餐时请明确告知服务员“免辣”或“微辣”。",
+    "宽窄巷子人流较大，建议错峰游览以获取更好体验。"
+  ],
+  "source_notes": [
+    "Itinerary is assembled by trip_service.py and can optionally use LangChain structured output.",
+    "[来源: chengdu_guide.md | 标题: 2.1 宽窄巷子景区]\n* **位置**：少城街道金河路口宽窄巷子\n* **门票**：免费\n* **游玩时长**：建议半天\n* **简介**：宽窄巷子是成都最具代表性的历史文化街区之一，保留了大量清代建筑风格的老宅院，同时融合了现代商业元素，是体验成都慢生活的好去处。",
+    "[来源: chengdu_guide.md | 标题: 中档特色（人均 50-150 元）]\n* **【马旺子·川小馆(成都太古里店)】招牌菜**：麻辣兔头、蒜泥白肉等地道川菜，环境优雅。人均预算 **约90元**。\n* **【陶德砂锅(建设路店)】招牌菜**：各式砂锅菜肴，尤其以牛肉砂锅最为出名，汤汁浓郁。人均预算 **约120元**。",
+    "已补充高德地图地址、坐标或路线估算信息。"
+  ],
+  "token_usage": {
+    "rewrite_prompt_tokens": 114,
+    "rewrite_completion_tokens": 11,
+    "embedding_prompt_tokens": 73,
+    "embedding_completion_tokens": 0,
+    "planner_prompt_tokens": 1713,
+    "planner_completion_tokens": 565,
+    "rerank_prompt_tokens": 3948,
+    "rerank_completion_tokens": 0
+  }
+}
