@@ -29,8 +29,11 @@ Pop-Location
 > 还有一层更细的口径：⑦ 的 5 组边界值共用 `mode: "invalid_destination"` 打桩，
 > 后端**无论收到什么都固定返回 422**，与输入值无关。因此这 5 组在「该值是否该被拒绝」
 > 上没有区分度，本质是 1 条用例的 5 次数据驱动，验的是请求体保真与错误态呈现。
-> 「`travelers=-1` 应触发 422」这一结论目前尚未被真实校验用例验证
-> （接口层 `test_api_contract.py` 仅 1 条手写 422），属已知缺口，别写成「边界值已覆盖」。
+> **「该值是否该被拒绝」由接口层 `backend/tests/test_request_boundaries.py` 回答**：
+> 同一组 5 个值用 `TestClient` 打真实 `TripRequest`，结论是 `travelers=0/-1`、`budget=-1`
+> 返回 422；**日期倒挂与 `budget=999999999` 当前实现返回 200**（无跨字段校验 / 无上界），
+> 这两处是已知校验缺口，写成断言是为了以后补校验时立刻红灯，不是假装已被拒绝。
+> 所以准确说法是「**一张设计表两层落地**」，别写成「UI 层 10 条验证了参数校验」。
 
 ---
 
@@ -52,6 +55,7 @@ Pop-Location
 ⑦ 是**一条 test 内参数化 5 组**：只注册一次 route，把 5 次请求体收集到数组里逐组断言，
 避免反复注册路由导致 handler 叠加。5 组共用的 422 由打桩固定返回、与输入值无关，
 所以断言的是请求体原样透传（前端没改值 / 没吞输入 / 没本地拦截），不是后端校验结果。
+真实期望见 `backend/tests/test_request_boundaries.py`（接口层，8 条，同一组值）。
 
 ---
 
@@ -62,9 +66,13 @@ Pop-Location
 - **视觉回归 / 可访问性**：没有截图基线、没有 a11y 断言。
 - **完整数据流转**：保存 → 历史列表 → 导出这条链暂未覆盖（需要额外打桩 `/trip/save`、`/trip` 并核对 `History.vue` 渲染）。
 - **登录态**：项目本来就没有鉴权，无此场景。
+- **打桩与真实契约的偏差**：⑤ 省级「青海」在 UI 打桩里返回 422「请输入具体城市」，
+  真实后端在无高德 key 时返回 **503 `city_resolution_unavailable`**；空目的地真实 422
+  的错误体是路由层自定义 dict，不是 Pydantic 的 `detail` list。这些差异由接口层测试
+  覆盖，UI 层仍按打桩契约验渲染，别把打桩响应当成后端事实。
 
 所以准确说法是 **「做了 10 条 UI 冒烟（含等价类/边界值设计），没做完整 UI 自动化」**。
-禁语：「UI 自动化覆盖全部流程」「前端做了参数校验」「这 10 条验证了真实后端」「这 5 组边界值验证了后端参数校验」。
+禁语：「UI 自动化覆盖全部流程」「前端做了参数校验」「这 10 条验证了真实后端」「UI 层这 5 组边界值验证了后端参数校验」。
 
 ---
 
@@ -74,7 +82,8 @@ Pop-Location
 |---|---|
 | `npm run e2e` | 10 passed（本机实测） |
 | `npm run build` | 通过（`tsconfig.json` 的 include 只含 `src/**/*`，e2e 不参与 `vue-tsc`） |
-| `pytest -q` | 131 passed / 2 deselected（前端改动不影响后端基线） |
+| `pytest -q` | 139 passed / 2 deselected（含接口层新增 8 条） |
+| 接口层闭环 | `backend/tests/test_request_boundaries.py` 8 passed，与 ⑦ 同一组值打真 Pydantic |
 | 失败产物 | `test-results/` 下 `trace.zip`、截图，均被 `.gitignore` 忽略 |
 | CI | **不进默认门禁**，`.github/workflows/test.yml` 一行未改 |
 
